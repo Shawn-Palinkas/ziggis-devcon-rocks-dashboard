@@ -290,7 +290,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <span class="tab-dot td-rocks"></span>Rocks
     </button>
   </nav>
-  <div class="topbar-meta">Apr 29, 2026</div>
+  <div class="topbar-meta" id="today-date"></div>
 </header>
 
 <main class="main">
@@ -1113,7 +1113,7 @@ function showError(msg) {
 
 
 // ── HELPERS ──
-const NOW=new Date('2026-04-29');
+const NOW=new Date(); // always today
 
 
 function priClass(p){const m={A:'pA',B:'pB',C:'pC',F:'pF'};return m[p]||'bn'}
@@ -1132,6 +1132,7 @@ function renderDashboard(){
   updateKPIs();
   init();
   showTab('sno');
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 }
 
 function updateKPIs(){
@@ -1924,7 +1925,7 @@ function renderSNO() {
 
     const yrsAgo = d => {
       if (!d) return '';
-      const ms = new Date('2026-04-29') - new Date(d);
+      const ms = new Date() - new Date(d);
       return (ms/(1000*60*60*24*365.25)).toFixed(1) + ' yr';
     };
 
@@ -2642,6 +2643,7 @@ function closeCommitteeModal() {
 window.addEventListener('DOMContentLoaded', function() {
   try {
     showTab('sno');
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
     loadSettings();
     checkRocksSetup();
     loadRocks();
