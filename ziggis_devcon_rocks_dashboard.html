@@ -1,0 +1,2665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ziggi's Coffee — Franchise Operations Dashboard</title>
+<style>
+
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--brown);min-height:100vh;display:flex;flex-direction:column}
+
+/* ── TOP BAR ── */
+.topbar{background:var(--tan-lt);border-bottom:1.5px solid var(--tan-mid);padding:0 2rem;display:flex;align-items:stretch;justify-content:space-between;position:sticky;top:0;z-index:100;gap:0}
+.topbar-brand{display:flex;flex-direction:column;justify-content:center;padding:.7rem 1.5rem .7rem 0;border-right:1px solid var(--tan-mid);margin-right:0;flex-shrink:0}
+.topbar-brand-name{font-size:15px;font-weight:700;color:var(--brown);letter-spacing:.02em}
+.topbar-brand-sub{font-size:9.5px;color:var(--brown-muted);text-transform:uppercase;letter-spacing:.07em;margin-top:1px}
+.tab-nav{display:flex;align-items:stretch;flex:1;padding-left:.5rem}
+.tab-btn{display:flex;align-items:center;gap:8px;padding:.9rem 1.8rem;font-size:15px;font-weight:500;color:var(--brown-muted);border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1.5px;transition:all .15s;white-space:nowrap;border-radius:0;outline:none}
+.tab-btn:hover{color:var(--brown);background:var(--tan-mid)}
+.tab-btn.active{color:var(--brown);font-weight:700;border-bottom-color:var(--tan-dk);background:rgba(207,165,113,.1)}
+.tab-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.td-sno{background:#72B1CB}.td-open{background:#4E9260}.td-resale{background:#CFA571}.td-rec{background:#C05530}
+.tab-count{font-size:12px;background:rgba(68,29,31,.1);border-radius:10px;padding:1px 7px;font-weight:600;margin-left:1px}
+.tab-btn.active .tab-count{background:rgba(160,120,64,.2);color:var(--tan-dk)}
+.topbar-meta{display:flex;align-items:center;padding:.7rem 0;font-size:11px;color:var(--brown-muted);flex-shrink:0;padding-left:1rem;border-left:1px solid var(--tan-mid);margin-left:.5rem}
+
+/* ── MAIN ── */
+.main{flex:1;padding:2rem 2.5rem}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem}
+.page-title{font-size:19px;font-weight:700;color:var(--brown)}
+.page-badge{background:var(--tan-lt);border:0.5px solid var(--tan-mid);border-radius:6px;padding:4px 11px;font-size:11px;font-weight:600;color:var(--brown-lt);text-transform:uppercase;letter-spacing:.06em}
+
+/* ── TAB PANELS ── */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --tan:#CFA571;--tan-lt:#F5E8D3;--tan-mid:#E8CEA0;--tan-dk:#A07840;
+  --brown:#441D1F;--brown-lt:#7A3A3D;--brown-muted:rgba(68,29,31,.55);
+  --blue:#72B1CB;--blue-lt:#E3F2F8;--blue-dk:#3A7B9A;
+  --green:#4E9260;--green-lt:#EAF3DE;
+  --red:#C05530;--red-lt:#FFF0EB;
+  --amber:#CFA571;--amber-lt:#FBF6EF;
+  --bg:#F7F1E8;--card:#fff;--border:#E8D5BA;
+  --radius:12px;--radius-sm:8px;
+}
+
+
+/* ── SECTION ── */
+
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:1.1rem;padding-bottom:.8rem;border-bottom:2px solid var(--tan-lt)}
+.section-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.si-sno{background:var(--blue-lt);color:var(--blue-dk)}
+.si-open{background:var(--green-lt);color:var(--green)}
+.si-resale{background:var(--tan-lt);color:var(--tan-dk)}
+.si-rec{background:var(--red-lt);color:var(--red)}
+.section-title-group{}
+.section-title{font-size:21px;font-weight:700;color:var(--brown)}
+.section-sub{font-size:11.5px;color:var(--brown-muted);margin-top:1px}
+.section-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:1.5rem}
+.section-kpis.three{grid-template-columns:repeat(3,1fr)}
+.section-kpis.two{grid-template-columns:repeat(2,1fr)}
+.kpi{background:var(--amber-lt);border:0.5px solid var(--tan-mid);border-radius:var(--radius-sm);padding:1.4rem 1.2rem;text-align:center}
+.kpi-v{font-size:40px;font-weight:700;line-height:1;color:var(--brown)}
+.kpi-l{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--brown-muted);margin-top:4px}
+.kpi-s{font-size:14px;color:var(--brown-muted);margin-top:4px}
+.kpi.blue{background:var(--blue-lt);border-color:rgba(114,177,203,.35)}
+.kpi.blue .kpi-v{color:var(--blue-dk)}
+.kpi.green{background:var(--green-lt);border-color:rgba(78,146,96,.3)}
+.kpi.green .kpi-v{color:var(--green)}
+.kpi.red{background:var(--red-lt);border-color:rgba(192,85,48,.3)}
+.kpi.red .kpi-v{color:var(--red)}
+
+/* ── SUBGROUP ── */
+.subgroup-label{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;padding:3px 9px;border-radius:4px;display:inline-flex;align-items:center;gap:5px;margin-bottom:.75rem}
+.sg-active{background:#E3F2F8;color:#3A7B9A}
+.sg-idle{background:var(--tan-lt);color:var(--tan-dk)}
+.sg-ngto{background:#FFEEE8;color:#993C1D}
+.sg-constr{background:var(--green-lt);color:var(--green)}
+.sg-plan{background:rgba(207,165,113,.15);color:var(--tan-dk)}
+.sg-resale{background:var(--tan-lt);color:var(--tan-dk)}
+.sg-exit{background:var(--red-lt);color:var(--red)}
+.sg-rec{background:var(--red-lt);color:var(--red)}
+
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:1.25rem}
+.card-grid.three{grid-template-columns:1fr 1fr 1fr}
+.card-grid.one{grid-template-columns:1fr}
+.card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.5rem 1.6rem}
+.card-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tan);margin-bottom:.65rem}
+
+/* strength bars */
+.str-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.str-lbl{font-size:15px;color:var(--brown);width:78px;flex-shrink:0;opacity:.85}
+.str-track{flex:1;height:13px;background:var(--tan-lt);border-radius:5px;overflow:hidden}
+.str-fill{height:100%;border-radius:5px}
+.str-n{font-size:16px;font-weight:700;width:32px;text-align:right;color:var(--brown)}
+.str-pct{font-size:13px;color:var(--brown-muted);width:30px}
+
+/* state bars */
+.state-row{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.st-code{font-size:11px;font-weight:700;color:var(--brown);width:30px}
+.st-track{flex:1;height:12px;background:var(--tan-lt);border-radius:3px;overflow:hidden}
+.st-fill{height:100%;border-radius:3px;background:var(--blue);opacity:.75}
+.st-n{font-size:11px;color:var(--brown-muted);width:16px;text-align:right}
+
+/* tables */
+.tbl-wrap{overflow-y:auto;max-height:260px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.tbl th{background:var(--tan-lt);color:var(--brown);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:5px 8px;text-align:left;position:sticky;top:0;cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--tan-mid)}
+.tbl th:hover{background:var(--tan-mid)}
+.tbl td{padding:5px 8px;border-bottom:0.5px solid #F0E4D0;color:var(--brown);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--amber-lt)}
+
+/* badges */
+.badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.bw{background:#FAECE7;color:#993C1D}
+.bm{background:#FAEEDA;color:#854F0B}
+.bs{background:#EAF3DE;color:#3B6D11}
+.bn{background:#F1EFE8;color:#888}
+.bst{background:var(--tan-lt);color:var(--brown-lt)}
+.bblue{background:var(--blue-lt);color:var(--blue-dk)}
+.bgreen{background:var(--green-lt);color:var(--green)}
+.bred{background:var(--red-lt);color:var(--red)}
+.btan{background:var(--tan-lt);color:var(--tan-dk)}
+
+/* filter */
+.filter{width:100%;padding:5px 9px;font-size:12px;border:0.5px solid #CCC;border-radius:var(--radius-sm);color:var(--brown);background:#fff;outline:none;margin-bottom:9px}
+.filter:focus{border-color:var(--tan)}
+
+/* list items */
+.list-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid #F0E4D0;font-size:12px}
+.list-row:last-child{border-bottom:none}
+.list-name{color:var(--brown);font-weight:500}
+.list-meta{color:var(--brown-muted);font-size:11px}
+
+/* timeline */
+.timeline{display:flex;flex-direction:column;gap:8px}
+.tl-item{display:flex;align-items:flex-start;gap:10px;padding:6px 8px;background:var(--amber-lt);border-radius:var(--radius-sm);border:0.5px solid var(--tan-lt)}
+.tl-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.tl-green{background:var(--green)}.tl-blue{background:var(--blue)}.tl-amber{background:var(--tan)}
+.tl-content{}
+.tl-name{font-size:12px;font-weight:600;color:var(--brown);line-height:1.2}
+.tl-loc{font-size:10.5px;color:var(--brown-muted)}
+.tl-dates{font-size:10.5px;color:var(--blue-dk);margin-top:2px}
+
+/* priority badges */
+.pA{background:#EAF3DE;color:#3B6D11}
+.pB{background:var(--blue-lt);color:var(--blue-dk)}
+.pC{background:var(--tan-lt);color:var(--tan-dk)}
+.pF{background:#FAECE7;color:#993C1D}
+
+/* committee placeholder */
+.committee-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.committee-card{background:var(--card);border:1.5px dashed var(--tan-mid);border-radius:var(--radius);padding:1.1rem;text-align:center;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;cursor:pointer;transition:all .15s}
+.committee-card:hover{border-color:var(--tan);background:var(--amber-lt)}
+.committee-card.filled{border-style:solid;border-color:var(--border)}
+.cc-icon{width:44px;height:44px;border-radius:50%;background:var(--tan-lt);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--tan-dk)}
+.cc-role{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--brown-muted)}
+.cc-name{font-size:13px;font-weight:600;color:var(--brown)}
+.cc-add{font-size:11px;color:var(--brown-muted)}
+.cc-plus{font-size:24px;color:var(--tan-mid)}
+.committee-note{background:var(--red-lt);border:0.5px solid rgba(192,85,48,.25);border-radius:var(--radius-sm);padding:.75rem 1rem;font-size:12px;color:var(--red);margin-bottom:1rem;line-height:1.5}
+.committee-criteria{background:var(--amber-lt);border:0.5px solid var(--tan-mid);border-radius:var(--radius-sm);padding:.85rem 1rem;margin-bottom:1.25rem}
+.cc-criteria-title{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tan-dk);font-weight:700;margin-bottom:.5rem}
+.cc-criteria-list{list-style:none;display:flex;flex-direction:column;gap:5px}
+.cc-criteria-list li{font-size:12px;color:var(--brown);display:flex;align-items:flex-start;gap:6px}
+.cc-criteria-list li::before{content:"›";color:var(--tan);font-weight:700;flex-shrink:0}
+
+/* summary bar */
+.summary-bar{display:flex;align-items:center;gap:8px;margin-bottom:1.1rem;background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:.65rem .9rem}
+.sb-item{display:flex;align-items:center;gap:5px;font-size:14px;color:var(--brown-muted)}
+.sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sb-val{font-weight:700;color:var(--brown)}
+.sb-div{height:16px;width:0.5px;background:var(--border);margin:0 4px}
+
+/* progress ring */
+.ring-wrap{display:flex;align-items:center;gap:14px}
+.ring-labels{display:flex;flex-direction:column;gap:6px}
+.ring-lbl{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--brown)}
+.ring-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* alert flag */
+.alert-row{display:flex;align-items:center;justify-content:space-between;padding:5px 7px;background:var(--red-lt);border-radius:var(--radius-sm);margin-bottom:5px;border:0.5px solid rgba(192,85,48,.2)}
+.alert-name{font-size:12px;font-weight:600;color:var(--brown)}
+.alert-count{font-size:13px;font-weight:700;color:var(--red)}
+
+/* sort indicators */
+.si::after{content:' ↕';font-size:9px;opacity:.4}
+.sa::after{content:' ↑';opacity:1}
+.sd::after{content:' ↓';opacity:1}
+
+/* section divider */
+.section-divider{border:none;border-top:1px dashed var(--border);margin:1.5rem 0}
+
+.open-count-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--green-lt);border:0.5px solid rgba(78,146,96,.35);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;color:var(--green);margin-left:8px}
+
+
+.td-rocks{background:#7B5EA7}
+
+/* ── ROCKS ── */
+.td-rocks{background:#7B5EA7}
+.rocks-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:1.5rem}
+
+.rock-category-card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.rock-cat-header{display:flex;align-items:center;gap:12px;padding:1.1rem 1.3rem;background:var(--amber-lt);border-bottom:0.5px solid var(--border)}
+.rock-cat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.rock-cat-title{font-size:15px;font-weight:700;color:var(--brown);line-height:1.2}
+.rock-cat-sub{font-size:11px;color:var(--brown-muted);margin-top:1px}
+.rock-add-btn{margin-left:auto;padding:5px 13px;background:var(--brown);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s;font-family:inherit}
+.rock-add-btn:hover{background:var(--brown-lt)}
+
+.rock-cat-progress{padding:.7rem 1.3rem;border-bottom:0.5px solid #F0E4D0;background:#FDFAF6}
+.rock-cat-prog-bar{height:8px;background:var(--tan-lt);border-radius:4px;overflow:hidden;margin-top:4px}
+.rock-cat-prog-fill{height:100%;border-radius:4px;background:var(--green);transition:width .4s}
+.rock-cat-prog-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--brown-muted)}
+
+.rock-list{padding:.5rem .8rem}
+.rock-list-empty{padding:1.2rem 1.3rem;font-size:13px;color:var(--brown-muted);font-style:italic;text-align:center}
+
+.rock-item{display:flex;align-items:flex-start;gap:10px;padding:.75rem .5rem;border-bottom:0.5px solid #F5EDE0;cursor:pointer;transition:background .12s;border-radius:6px}
+.rock-item:last-child{border-bottom:none}
+.rock-item:hover{background:var(--amber-lt)}
+.rock-item-left{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0}
+.rock-status-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.rsd-on{background:var(--green)}.rsd-off{background:var(--red)}.rsd-done{background:#7B5EA7}.rsd-new{background:#CCC}
+.rock-item-body{flex:1;min-width:0}
+.rock-item-title{font-size:13.5px;font-weight:600;color:var(--brown);line-height:1.3;margin-bottom:3px}
+.rock-item-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rock-item-owner{font-size:11.5px;color:var(--brown-muted)}
+.rock-item-due{font-size:11px;color:var(--brown-muted)}
+.rock-item-prog{display:flex;align-items:center;gap:6px;margin-top:5px}
+.rock-mini-track{flex:1;height:5px;background:var(--tan-lt);border-radius:3px;overflow:hidden}
+.rock-mini-fill{height:100%;border-radius:3px}
+.rock-mini-pct{font-size:11px;color:var(--brown-muted);width:28px;text-align:right}
+.rock-item-notes{font-size:11.5px;color:var(--brown-muted);font-style:italic;margin-top:3px;opacity:.8}
+
+/* modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(68,29,31,.4);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:var(--radius);padding:1.5rem;width:540px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+.modal-title{font-size:16px;font-weight:700;color:var(--brown);margin-bottom:1.1rem}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:1.1rem;padding-top:.9rem;border-top:0.5px solid var(--border)}
+.btn-cancel{padding:7px 16px;border:0.5px solid var(--border);background:#fff;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--brown-muted)}
+.btn-save{padding:7px 18px;background:var(--brown);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-delete{padding:7px 14px;background:var(--red-lt);color:var(--red);border:0.5px solid rgba(192,85,48,.3);border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;margin-right:auto}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--brown-muted)}
+.form-input{padding:7px 10px;font-size:13px;border:0.5px solid #CCC;border-radius:6px;color:var(--brown);background:#fff;outline:none;font-family:inherit}
+.form-input:focus{border-color:var(--tan)}
+.form-select{padding:7px 10px;font-size:13px;border:0.5px solid #CCC;border-radius:6px;color:var(--brown);background:#fff;outline:none;font-family:inherit;cursor:pointer}
+.form-select:focus{border-color:var(--tan)}
+
+/* edit modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(68,29,31,.35);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:var(--radius);padding:1.5rem;width:520px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.15)}
+.modal-title{font-size:15px;font-weight:700;color:var(--brown);margin-bottom:1rem}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:1rem}
+.btn-cancel{padding:6px 14px;border:0.5px solid var(--border);background:#fff;border-radius:6px;font-size:12.5px;cursor:pointer;font-family:inherit;color:var(--brown-muted)}
+.btn-save{padding:6px 16px;background:var(--brown);color:#fff;border:none;border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-delete{padding:6px 14px;background:var(--red-lt);color:var(--red);border:0.5px solid rgba(192,85,48,.3);border-radius:6px;font-size:12.5px;cursor:pointer;font-family:inherit;margin-right:auto}
+.rocks-empty{text-align:center;padding:3rem 1rem;color:var(--brown-muted);font-size:13px}
+.rocks-empty-icon{font-size:36px;margin-bottom:.75rem}
+
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-brand-name">Ziggi's Coffee</div>
+    <div class="topbar-brand-sub">Franchise Ops Dashboard</div>
+  </div>
+  <nav class="tab-nav">
+    <button id="tab-sno" class="tab-btn active" onclick="showTab('sno')">
+      <span class="tab-dot td-sno"></span>SNO
+    </button>
+    <button id="tab-open" class="tab-btn" onclick="showTab('open')">
+      <span class="tab-dot td-open"></span>Open Stores
+    </button>
+    <button id="tab-resale" class="tab-btn" onclick="showTab('resale')">
+      <span class="tab-dot td-resale"></span>Resale
+    </button>
+    <button id="tab-rec" class="tab-btn" onclick="showTab('rec')">
+      <span class="tab-dot td-rec"></span>Real Estate Committee
+    </button>
+    <button id="tab-rocks" class="tab-btn" onclick="showTab('rocks')">
+      <span class="tab-dot td-rocks"></span>Rocks
+    </button>
+  </nav>
+  <div class="topbar-meta">Apr 29, 2026</div>
+</header>
+
+<main class="main">
+  <!-- global summary -->
+  <div class="summary-bar">
+    <div class="sb-item"><span class="sb-dot" style="background:#888"></span><span class="sb-val" id="sb-fas">342</span> total FAs signed</div>
+    <div class="sb-div"></div>
+    <div class="sb-item"><span class="sb-dot" style="background:var(--blue)"></span><span class="sb-val" id="sb-sno">154</span> signed not open</div>
+    <div class="sb-div"></div>
+    <div class="sb-item"><span class="sb-dot" style="background:#4E9260"></span><span class="sb-val" id="sb-construct">6</span> in construction</div>
+    <div class="sb-div"></div>
+    <div class="sb-item"><span class="sb-dot" style="background:var(--tan)"></span><span class="sb-val" id="sb-planning">29</span> in planning</div>
+    <div class="sb-div"></div>
+    <div class="sb-item"><span class="sb-dot" style="background:var(--red)"></span><span class="sb-val">15</span> resale-ready</div>
+  </div>
+
+  <div class="tab-panel active" id="panel-sno">
+  <div class="section-header">
+    <div class="section-icon si-sno">✍</div>
+    <div class="section-title-group">
+      <div class="section-title">SNO — Signed Not Open</div>
+    </div>
+    <button onclick="openAddSNO()" style="margin-left:auto;padding:8px 18px;background:var(--brown);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Add Franchisee</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="section-kpis">
+    <div class="kpi blue"><div class="kpi-v" id="sno-active-count" style="color:var(--blue-dk)">—</div><div class="kpi-l">Active FA<span style="font-size:.7em">s</span></div><div class="kpi-s" id="sno-active-sub"> </div></div>
+    <div class="kpi"><div class="kpi-v" id="sno-idle-count">—</div><div class="kpi-l">Idle FA<span style="font-size:.7em">s</span></div><div class="kpi-s" id="sno-idle-sub"> </div></div>
+    <div class="kpi red"><div class="kpi-v" id="sno-ngto-count" style="color:var(--red)">—</div><div class="kpi-l">NGTO FA<span style="font-size:.7em">s</span></div><div class="kpi-s" id="sno-ngto-sub"> </div></div>
+    <div class="kpi green"><div class="kpi-v" id="kpi-contracts" style="color:var(--green)">6</div><div class="kpi-l">Contracts Executed</div><div class="kpi-s" id="budget-label" onclick="openBudgetEdit()" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" title="Click to edit">19 in 2026 budget</div></div>
+  </div>
+
+  <!-- Strength filter -->
+  <div class="rocks-filter-bar" style="margin-bottom:.75rem">
+    <span style="font-size:12px;color:var(--brown-muted);font-weight:600">Filter by strength:</span>
+    <button class="rocks-filter-btn on" onclick="filterSNO('all',this)">All</button>
+    <button class="rocks-filter-btn" onclick="filterSNO('Weak',this)" style="color:#D86040">Weak</button>
+    <button class="rocks-filter-btn" onclick="filterSNO('Medium',this)" style="color:var(--tan-dk)">Medium</button>
+    <button class="rocks-filter-btn" onclick="filterSNO('Strong',this)" style="color:var(--green)">Strong</button>
+  </div>
+
+  <!-- Strength legend -->
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:1rem;padding:.65rem 1rem;background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius-sm)">
+    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--brown-muted)">Finance Strength:</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:#D86040"><span style="width:10px;height:10px;border-radius:2px;background:#D86040;display:inline-block"></span>Weak — lease only</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--tan-dk)"><span style="width:10px;height:10px;border-radius:2px;background:var(--tan);display:inline-block"></span>Medium — can purchase</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--green)"><span style="width:10px;height:10px;border-radius:2px;background:var(--green);display:inline-block"></span>Strong — can purchase multiple</span>
+  </div>
+
+  <!-- 4-column grid: Active | Idle | NGTO | Contracts Executed -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px">
+
+    <!-- ACTIVE -->
+    <div class="rock-category-card">
+      <div class="rock-cat-header" style="border-left:4px solid #72B1CB">
+        <div class="rock-cat-icon" style="background:#E3F2F8;color:#3A7B9A">✍</div>
+        <div><div class="rock-cat-title">Active</div><div class="rock-cat-sub">Searching for sites</div></div>
+      </div>
+      <div class="rock-cat-progress" id="sno-prog-active"></div>
+      <div class="rock-list" id="sno-list-active"></div>
+      <div class="rock-list-empty" id="sno-empty-active">No active franchisees</div>
+    </div>
+
+    <!-- IDLE -->
+    <div class="rock-category-card">
+      <div class="rock-cat-header" style="border-left:4px solid var(--tan)">
+        <div class="rock-cat-icon" style="background:var(--tan-lt);color:var(--tan-dk)">⏸</div>
+        <div><div class="rock-cat-title">Idle</div><div class="rock-cat-sub">Signed but stalled</div></div>
+      </div>
+      <div class="rock-cat-progress" id="sno-prog-idle"></div>
+      <div class="rock-list" id="sno-list-idle"></div>
+      <div class="rock-list-empty" id="sno-empty-idle">No idle franchisees</div>
+    </div>
+
+    <!-- NGTO -->
+    <div class="rock-category-card">
+      <div class="rock-cat-header" style="border-left:4px solid var(--red)">
+        <div class="rock-cat-icon" style="background:var(--red-lt);color:var(--red)">✗</div>
+        <div><div class="rock-cat-title">NGTO</div><div class="rock-cat-sub">Not going to open</div></div>
+      </div>
+      <div class="rock-cat-progress" id="sno-prog-ngto"></div>
+      <div class="rock-list" id="sno-list-ngto"></div>
+      <div class="rock-list-empty" id="sno-empty-ngto">No NGTO franchisees</div>
+    </div>
+
+    <!-- CONTRACTS EXECUTED -->
+    <div class="rock-category-card">
+      <div class="rock-cat-header" style="border-left:4px solid var(--green)">
+        <div class="rock-cat-icon" style="background:var(--green-lt);color:var(--green)">📝</div>
+        <div><div class="rock-cat-title">Contracts Executed</div><div class="rock-cat-sub" id="contracts-subtitle">2026</div></div>
+        <button onclick="openAddContract()" style="margin-left:auto;padding:4px 10px;background:var(--brown);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Add</button>
+      </div>
+      <div class="rock-list" id="contracts-grid"></div>
+      <div class="rock-list-empty" id="contracts-empty">No contracts yet</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="tab-panel" id="panel-open">
+  <div class="section-header">
+    <div class="section-icon si-open">🏗</div>
+    <div class="section-title-group">
+      <div class="section-title">Open Stores <span class="open-count-badge" id="open-stores-badge">109 open</span></div>
+    </div>
+    <button onclick="openAddStore_OS()" style="margin-left:auto;padding:8px 18px;background:var(--brown);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Add Store</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="section-kpis three">
+    <div class="kpi green"><div class="kpi-v" id="os-construction-count" style="color:var(--green)">—</div><div class="kpi-l">Under Construction</div></div>
+    <div class="kpi"><div class="kpi-v" id="os-planning-count">—</div><div class="kpi-l">In Planning</div></div>
+    <div class="kpi blue"><div class="kpi-v" id="os-states-count" style="color:var(--blue-dk)">—</div><div class="kpi-l">States</div></div>
+  </div>
+
+  <!-- Two category columns -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+
+    <!-- UNDER CONSTRUCTION -->
+    <div class="rock-category-card">
+      <div class="rock-cat-header" style="border-left:4px solid var(--green)">
+        <div class="rock-cat-icon" style="background:var(--green-lt);color:var(--green)">🏗</div>
+        <div>
+          <div class="rock-cat-title">Under Construction</div>
+          <div class="rock-cat-sub">Stores actively being built</div>
+        </div>
+      </div>
+      <div class="rock-list" id="os-list-construction"></div>
+      <div class="rock-list-empty" id="os-empty-construction">No stores under construction</div>
+    </div>
+
+    <!-- PLANNING -->
+    <div class="rock-category-card">
+      <div class="rock-cat-header" style="border-left:4px solid var(--blue)">
+        <div class="rock-cat-icon" style="background:var(--blue-lt);color:var(--blue-dk)">📋</div>
+        <div>
+          <div class="rock-cat-title">Planning</div>
+          <div class="rock-cat-sub">Sites identified, working toward construction</div>
+        </div>
+      </div>
+      <div class="rock-list" id="os-list-planning"></div>
+      <div class="rock-list-empty" id="os-empty-planning">No stores in planning</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Open Stores Modal -->
+<div class="modal-overlay" id="os-modal">
+  <div class="modal">
+    <div class="modal-title" id="os-modal-title">Add Store</div>
+    <input type="hidden" id="os-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Franchisee</label>
+        <input class="form-input" id="os-franchisee" placeholder="e.g. Larsen, Erik">
+      </div>
+      <div class="form-group">
+        <label class="form-label">State</label>
+        <input class="form-input" id="os-state" placeholder="e.g. WI" maxlength="5">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label class="form-label">Location</label>
+        <input class="form-input" id="os-location" placeholder="e.g. Manitowoc 1022 Washington St">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Layout Type</label>
+        <input class="form-input" id="os-layout" placeholder="e.g. Café/DT Stand-alone">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="os-category">
+          <option value="Under Construction">Under Construction</option>
+          <option value="Planning">Planning</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Expected Open Date</label>
+        <input class="form-input" id="os-opendate" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes <span style="opacity:.5;font-weight:400">(optional)</span></label>
+        <input class="form-input" id="os-notes" placeholder="e.g. CO date, Xsite, etc.">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-delete" id="os-delete-btn" onclick="deleteStore_OS()" style="display:none">Remove</button>
+      <button class="btn-cancel" onclick="closeModal_OS()">Cancel</button>
+      <button class="btn-save" onclick="saveStore_OS()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="tab-panel" id="panel-resale">
+  <div class="section-header">
+    <div class="section-icon si-resale">🔄</div>
+    <div class="section-title-group">
+      <div class="section-title">Resale</div>
+    </div>
+    <button onclick="openAddStore()" style="margin-left:auto;padding:8px 18px;background:var(--brown);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Add Store</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="section-kpis three">
+    <div class="kpi"><div class="kpi-v" id="resale-can-sell-count">—</div><div class="kpi-l">Can Sell</div></div>
+    <div class="kpi red"><div class="kpi-v" id="resale-should-close-count" style="color:var(--red)">—</div><div class="kpi-l">Should Close</div><div class="kpi-s">recommended for closure</div></div>
+    <div class="kpi blue"><div class="kpi-v" id="resale-states-count" style="color:var(--blue-dk)">—</div><div class="kpi-l">States</div><div class="kpi-s" id="resale-states-sub"> </div></div>
+  </div>
+
+  <!-- Two category columns -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+
+    <!-- CAN SELL -->
+    <div class="rock-category-card">
+      <div class="rock-cat-header" style="border-left:4px solid var(--green)">
+        <div class="rock-cat-icon" style="background:var(--green-lt);color:var(--green)">✅</div>
+        <div>
+          <div class="rock-cat-title">Can Sell</div>
+          <div class="rock-cat-sub">Stores available for resale to a new franchisee</div>
+        </div>
+      </div>
+      <div class="rock-list" id="resale-list-can-sell"></div>
+      <div class="rock-list-empty" id="resale-empty-can-sell">No stores listed — click + Add Store to get started</div>
+    </div>
+
+    <!-- SHOULD CLOSE -->
+    <div class="rock-category-card">
+      <div class="rock-cat-header" style="border-left:4px solid var(--red)">
+        <div class="rock-cat-icon" style="background:var(--red-lt);color:var(--red)">⚠️</div>
+        <div>
+          <div class="rock-cat-title">Should Close</div>
+          <div class="rock-cat-sub">Stores recommended for closure</div>
+        </div>
+      </div>
+      <div class="rock-list" id="resale-list-should-close"></div>
+      <div class="rock-list-empty" id="resale-empty-should-close">No stores flagged for closure</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Resale Store Modal -->
+<div class="modal-overlay" id="resale-modal">
+  <div class="modal">
+    <div class="modal-title" id="resale-modal-title">Add Store</div>
+    <input type="hidden" id="rs-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="form-group" style="grid-column:span 2">
+        <label class="form-label">Location</label>
+        <input class="form-input" id="rs-location" placeholder="e.g. Westminster 8525 W. 100th Ave">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Franchisee</label>
+        <input class="form-input" id="rs-franchisee" placeholder="e.g. Lord, Natalie">
+      </div>
+      <div class="form-group">
+        <label class="form-label">State</label>
+        <input class="form-input" id="rs-state" placeholder="e.g. CO" maxlength="5">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Store #</label>
+        <input class="form-input" id="rs-store" placeholder="e.g. 12" type="number">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="rs-category">
+          <option value="Can Sell">Can Sell</option>
+          <option value="Should Close">Should Close</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-delete" id="rs-delete-btn" onclick="deleteStore()" style="display:none">Remove</button>
+      <button class="btn-cancel" onclick="closeResaleModal()">Cancel</button>
+      <button class="btn-save" onclick="saveStore()">Save</button>
+    </div>
+  </div>
+</div>
+<div class="tab-panel" id="panel-rec">
+  <div class="section-header">
+    <div class="section-icon si-rec">🏛</div>
+    <div class="section-title-group">
+      <div class="section-title">Real Estate Committee</div>
+    </div>
+    <button onclick="openAddMember()" style="margin-left:auto;padding:8px 18px;background:var(--brown);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Add Seat</button>
+  </div>
+
+  <div class="committee-criteria" style="margin-bottom:1.25rem">
+    <div class="cc-criteria-title">Committee Mandate</div>
+    <ul class="cc-criteria-list">
+      <li>Review and approve all new site proposals before franchisee LOI submission</li>
+      <li>Assess deal type suitability (purchase vs. lease vs. BTS) per territory demographics</li>
+      <li>Prioritize Planning pipeline (A/B/C/F ratings) and escalate stalled projects</li>
+      <li>Evaluate resale pricing and buyer qualification for resale-ready stores</li>
+      <li>Coordinate with legal on FA exits for NGTO and Priority D franchisees</li>
+      <li>Report monthly to leadership on SNO conversion rates</li>
+    </ul>
+  </div>
+
+  <!-- Committee grid — populated by renderCommittee() -->
+  <div class="committee-grid" id="committee-grid">
+    <div style="text-align:center;padding:3rem;color:var(--brown-muted);grid-column:span 3;font-size:13px">
+      Loading committee members…
+    </div>
+  </div>
+
+  <div style="margin-top:1.25rem;padding:.85rem 1rem;background:var(--amber-lt);border:0.5px solid var(--tan-mid);border-radius:var(--radius-sm)">
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tan-dk);font-weight:700;margin-bottom:.5rem">Suggested Meeting Cadence</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:.5rem">
+      <div style="font-size:13px;color:var(--brown)"><span style="font-weight:600">Weekly:</span> Construction check-ins · Active franchisee site updates</div>
+      <div style="font-size:13px;color:var(--brown)"><span style="font-weight:600">Monthly:</span> Planning pipeline review · SNO conversion status</div>
+      <div style="font-size:13px;color:var(--brown)"><span style="font-weight:600">Quarterly:</span> Resale pricing review · NGTO exit decisions · FA redeployment</div>
+    </div>
+  </div>
+</div>
+<div class="tab-panel" id="panel-rocks">
+
+  <div class="section-header">
+    <div class="section-icon" style="background:#F0EBF8;color:#7B5EA7">🪨</div>
+    <div class="section-title-group">
+      <div class="section-title">Rocks — 90-Day Priorities</div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="rocks-kpis">
+    <div class="kpi" style="background:#F0EBF8;border-color:rgba(123,94,167,.25)"><div class="kpi-v" id="r-total" style="color:#7B5EA7">0</div><div class="kpi-l">Total Rocks</div></div>
+    <div class="kpi green"><div class="kpi-v" id="r-on" style="color:var(--green)">0</div><div class="kpi-l">On Track</div></div>
+    <div class="kpi red"><div class="kpi-v" id="r-off" style="color:var(--red)">0</div><div class="kpi-l">Off Track</div></div>
+    <div class="kpi" style="background:#F0EBF8;border-color:rgba(123,94,167,.25)"><div class="kpi-v" id="r-done" style="color:#7B5EA7">0</div><div class="kpi-l">Complete</div></div>
+    <div class="kpi"><div class="kpi-v" id="r-pct">—</div><div class="kpi-l">Completion %</div></div>
+  </div>
+
+  <!-- 4 Category Rock Groups -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px" id="rocks-categories">
+
+    <!-- SNO -->
+    <div class="rock-category-card" id="cat-sno">
+      <div class="rock-cat-header" style="border-left:4px solid #72B1CB">
+        <div class="rock-cat-icon" style="background:#E3F2F8;color:#3A7B9A">✍</div>
+        <div>
+          <div class="rock-cat-title">SNO</div>
+          <div class="rock-cat-sub">Signed Not Open</div>
+        </div>
+        <button class="rock-add-btn" onclick="openAddRock('SNO')">+ Add Rock</button>
+      </div>
+      <div class="rock-cat-progress" id="cat-sno-progress"></div>
+      <div class="rock-list" id="rock-list-sno"></div>
+      <div class="rock-list-empty" id="rock-empty-sno">No rocks yet — add a 90-day priority for SNO</div>
+    </div>
+
+    <!-- Open Stores -->
+    <div class="rock-category-card" id="cat-open">
+      <div class="rock-cat-header" style="border-left:4px solid #4E9260">
+        <div class="rock-cat-icon" style="background:var(--green-lt);color:var(--green)">🏗</div>
+        <div>
+          <div class="rock-cat-title">Open Stores</div>
+          <div class="rock-cat-sub">Construction &amp; Planning</div>
+        </div>
+        <button class="rock-add-btn" onclick="openAddRock('Open Stores')">+ Add Rock</button>
+      </div>
+      <div class="rock-cat-progress" id="cat-open-progress"></div>
+      <div class="rock-list" id="rock-list-open"></div>
+      <div class="rock-list-empty" id="rock-empty-open">No rocks yet — add a 90-day priority for Open Stores</div>
+    </div>
+
+    <!-- Resale -->
+    <div class="rock-category-card" id="cat-resale">
+      <div class="rock-cat-header" style="border-left:4px solid #CFA571">
+        <div class="rock-cat-icon" style="background:var(--tan-lt);color:var(--tan-dk)">🔄</div>
+        <div>
+          <div class="rock-cat-title">Resale</div>
+          <div class="rock-cat-sub">Resale Ready &amp; Exit Candidates</div>
+        </div>
+        <button class="rock-add-btn" onclick="openAddRock('Resale')">+ Add Rock</button>
+      </div>
+      <div class="rock-cat-progress" id="cat-resale-progress"></div>
+      <div class="rock-list" id="rock-list-resale"></div>
+      <div class="rock-list-empty" id="rock-empty-resale">No rocks yet — add a 90-day priority for Resale</div>
+    </div>
+
+    <!-- Real Estate Committee -->
+    <div class="rock-category-card" id="cat-rec">
+      <div class="rock-cat-header" style="border-left:4px solid #C05530">
+        <div class="rock-cat-icon" style="background:var(--red-lt);color:var(--red)">🏛</div>
+        <div>
+          <div class="rock-cat-title">Real Estate Committee</div>
+          <div class="rock-cat-sub">Committee Goals</div>
+        </div>
+        <button class="rock-add-btn" onclick="openAddRock('Real Estate Committee')">+ Add Rock</button>
+      </div>
+      <div class="rock-cat-progress" id="cat-rec-progress"></div>
+      <div class="rock-list" id="rock-list-rec"></div>
+      <div class="rock-list-empty" id="rock-empty-rec">No rocks yet — add a 90-day priority for the Committee</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- Committee Member Modal -->
+<div class="modal-overlay" id="committee-modal">
+  <div class="modal">
+    <div class="modal-title" id="committee-modal-title">Add Committee Seat</div>
+    <input type="hidden" id="cm-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Name <span style="opacity:.5;font-weight:400">(or "TBD")</span></label>
+        <input class="form-input" id="cm-name" placeholder="e.g. Sarah Johnson">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Initials <span style="opacity:.5;font-weight:400">(shown on avatar)</span></label>
+        <input class="form-input" id="cm-initials" placeholder="e.g. SJ" maxlength="3">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-select" id="cm-role">
+          <option value="Chair">Chair</option>
+          <option value="Member">Member</option>
+          <option value="Advisory">Advisory</option>
+          <option value="Legal">Legal</option>
+          <option value="Finance">Finance</option>
+          <option value="Operations">Operations</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Title / Position</label>
+        <input class="form-input" id="cm-title" placeholder="e.g. VP of Real Estate">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-delete" id="cm-delete-btn" onclick="deleteMember()" style="display:none">Remove Seat</button>
+      <button class="btn-cancel" onclick="closeCommitteeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveMember()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Rock Modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Add Rock</div>
+    <input type="hidden" id="edit-rock-id" value="">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="form-group" style="grid-column:span 2">
+        <label class="form-label">Rock Description</label>
+        <input class="form-input" id="edit-rock-title" placeholder="What needs to be accomplished in 90 days?">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="edit-rock-cat">
+          <option value="SNO">SNO</option>
+          <option value="Open Stores">Open Stores</option>
+          <option value="Resale">Resale</option>
+          <option value="Real Estate Committee">Real Estate Committee</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Owner</label>
+        <input class="form-input" id="edit-rock-owner" placeholder="Name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Date</label>
+        <input class="form-input" id="edit-rock-due" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="edit-rock-status">
+          <option value="new">Not Started</option>
+          <option value="on">On Track</option>
+          <option value="off">Off Track</option>
+          <option value="done">Complete</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label class="form-label">Progress % <span style="font-weight:400;opacity:.6">— drag or type</span></label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <input type="range" id="edit-rock-progress-range" min="0" max="100" value="0" style="flex:1;accent-color:var(--tan-dk)" oninput="document.getElementById('edit-rock-progress').value=this.value">
+          <input class="form-input" id="edit-rock-progress" type="number" min="0" max="100" value="0" style="width:64px" oninput="document.getElementById('edit-rock-progress-range').value=this.value">
+        </div>
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label class="form-label">Notes <span style="font-weight:400;opacity:.6">(optional)</span></label>
+        <input class="form-input" id="edit-rock-notes" placeholder="Context, blockers, next steps…">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-delete" id="modal-delete-btn" onclick="deleteRock()" style="display:none">Delete Rock</button>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveRock()">Save Rock</button>
+    </div>
+  </div>
+</div>
+
+<!-- Contracts Modal -->
+<div class="modal-overlay" id="contracts-modal">
+  <div class="modal">
+    <div class="modal-title" id="contracts-modal-title">Add Executed Contract</div>
+    <input type="hidden" id="ct-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="form-group" style="grid-column:span 2">
+        <label class="form-label">Franchisee Name</label>
+        <input class="form-input" id="ct-franchisee" placeholder="e.g. Panjwani.Attawala">
+      </div>
+      <div class="form-group">
+        <label class="form-label">State</label>
+        <input class="form-input" id="ct-state" placeholder="e.g. GA" maxlength="5">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Financial Strength</label>
+        <select class="form-select" id="ct-strength">
+          <option value="">— Not rated —</option>
+          <option value="Weak">Weak — lease only</option>
+          <option value="Medium">Medium — can purchase</option>
+          <option value="Strong">Strong — can purchase multiple</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Execution Date</label>
+        <input class="form-input" id="ct-execdate" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes <span style="opacity:.5;font-weight:400">(optional)</span></label>
+        <input class="form-input" id="ct-notes" placeholder="e.g. location, deal type…">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-delete" id="ct-delete-btn" onclick="deleteContract()" style="display:none">Remove</button>
+      <button class="btn-cancel" onclick="closeContractsModal()">Cancel</button>
+      <button class="btn-save" onclick="saveContract()">Save</button>
+    </div>
+  </div>
+</div>
+<!-- SNO Franchisee Modal -->
+<div class="modal-overlay" id="sno-modal">
+  <div class="modal">
+    <div class="modal-title" id="sno-modal-title">Add Franchisee</div>
+    <input type="hidden" id="sno-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="form-group" style="grid-column:span 2">
+        <label class="form-label">Franchisee Name</label>
+        <input class="form-input" id="sno-name" placeholder="e.g. Smith, John">
+      </div>
+      <div class="form-group">
+        <label class="form-label">State</label>
+        <input class="form-input" id="sno-state" placeholder="e.g. CO" maxlength="5">
+      </div>
+      <div class="form-group">
+        <label class="form-label">FA Count</label>
+        <input class="form-input" id="sno-fa" type="number" min="0" placeholder="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Financial Strength</label>
+        <select class="form-select" id="sno-strength">
+          <option value="">— Not rated —</option>
+          <option value="Weak">Weak — lease only</option>
+          <option value="Medium">Medium — can purchase</option>
+          <option value="Strong">Strong — can purchase multiple</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="sno-category">
+          <option value="Active">Active</option>
+          <option value="Idle">Idle</option>
+          <option value="NGTO">NGTO</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Signing Date</label>
+        <input class="form-input" id="sno-signdate" type="date">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label class="form-label">Notes <span style="opacity:.5;font-weight:400">(optional)</span></label>
+        <input class="form-input" id="sno-notes" placeholder="e.g. contacted, in conversation, on hold…">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-delete" id="sno-delete-btn" onclick="deleteSNO()" style="display:none">Remove</button>
+      <button class="btn-cancel" onclick="closeModalSNO()">Cancel</button>
+      <button class="btn-save" onclick="saveSNO()">Save</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+
+function showTab(id){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// ── GOOGLE SHEETS CONNECTION ──
+// Sheet ID — update this if you ever move the Google Sheet
+const SHEET_ID = '1ExLu410IAF3c8Y5Nt2MxnaPMZiYvSvJ9YTPqY9RtR64';
+
+// Fetch a sheet as CSV and parse into array of row arrays
+async function fetchSheet(sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  let res; try{res=await fetch(url);}catch(e){console.warn('CORS error:',sheetName);return[];}
+  if(!res.ok){console.warn('Sheet error:',sheetName);return[];}
+  const text = await res.text();
+  return parseCSV(text);
+}
+
+// Simple but robust CSV parser (handles quoted fields with commas)
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.split('\n');
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const row = [];
+    let field = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i+1] === '"') { field += '"'; i++; }
+        else inQuotes = !inQuotes;
+      } else if (ch === ',' && !inQuotes) {
+        row.push(field.trim()); field = '';
+      } else {
+        field += ch;
+      }
+    }
+    row.push(field.trim());
+    rows.push(row);
+  }
+  return rows;
+}
+
+// Find column index by header name (case-insensitive, trims whitespace)
+function colIndex(headers, name) {
+  const n = name.toLowerCase().trim();
+  return headers.findIndex(h => h.toLowerCase().trim() === n);
+}
+
+// Parse finance strength text → category
+function parseStrength(val) {
+  if (!val) return '';
+  const v = val.toLowerCase();
+  if (v.includes('weak') || v.startsWith('1')) return 'Weak';
+  if (v.includes('medium') || v.startsWith('2')) return 'Medium';
+  if (v.includes('strong') || v.startsWith('3')) return 'Strong';
+  return '';
+}
+
+// Live data containers — populated by loadAllData()
+let ACTIVE = [], IDLE = [], NGTO = [];
+let CONSTRUCTION = [], PLANNING = [], RESALE = [];
+let KPI = {};
+
+async function loadAllData() {
+  showLoading(true);
+  try {
+    // Run all fetches — catch individually so one failure doesn't block everything
+    await Promise.allSettled([
+      loadSiteSelection(),
+      loadActive(),
+      loadIdle(),
+      loadNeverOpen()
+    ]);
+  } catch(err) {
+    console.warn('Some data could not load:', err.message);
+  } finally {
+    showLoading(false);
+    renderDashboard();
+  }
+}
+
+async function loadSiteSelection() {
+  const rows = await fetchSheet('Site Selection');
+  // Row index 1 (0-based) is the KPI summary row
+  // Row index 2 is the header row
+  const headers = rows[2];
+  const kpiRow  = rows[1];
+  const get = (name) => {
+    const i = colIndex(headers, name);
+    return i >= 0 ? (parseFloat(kpiRow[i]) || 0) : 0;
+  };
+  KPI = {
+    totalFAs:    get('FA signed'),
+    openStores:  get('Open Stores'),
+    construct:   get('Construct'),
+    planning:    get('Planning'),
+    sno:         get('Search'),
+    activeFA:    get('Active FA'),
+    idle:        get('Idle'),
+    neverOpen:   get('Will never Open'),
+    budget2026:  get('2026'),
+    closed:      get('Closed Stores')
+  };
+}
+
+async function loadActive() {
+  const rows = await fetchSheet('Active');
+  // Header row is row index 2; data starts at row index 3
+  const hdr = rows[2];
+  const iName = colIndex(hdr, 'Franchisee ') !== -1 ? colIndex(hdr, 'Franchisee ') : colIndex(hdr, 'Franchisee');
+  const iState = colIndex(hdr, 'State');
+  const iActive = colIndex(hdr, 'Active (24)') !== -1 ? colIndex(hdr, 'Active (24)') : 
+                  hdr.findIndex(h => h.toLowerCase().includes('active'));
+  const iFinance = hdr.findIndex(h => h.toLowerCase().includes('finance strength'));
+  
+  ACTIVE = [];
+  // Budget franchisees — second table starts around col 8
+  // Find 2026 Budget header
+  const iBudgetHdr = hdr.findIndex(h => h.toLowerCase().includes('2026 budget'));
+  const iBudgetName = iBudgetHdr !== -1 ? iBudgetHdr : -1;
+  const iBudgetState = iBudgetHdr !== -1 ? iBudgetHdr + 1 : -1;
+
+  for (let i = 3; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row[iName] && row[iName] !== '0') continue;
+    const name = row[iName];
+    if (!name || name === 'Franchisee' || name === 'Franchisee ') continue;
+    ACTIVE.push({
+      n: name,
+      s: iState >= 0 ? row[iState] : '',
+      active: iActive >= 0 ? (row[iActive] || '0') : '0',
+      f: iFinance >= 0 ? parseStrength(row[iFinance]) : '',
+      b: false // will determine from budget list
+    });
+  }
+
+  // Mark budget franchisees
+  if (iBudgetName >= 0) {
+    for (let i = 3; i < rows.length; i++) {
+      const bName = rows[i][iBudgetName];
+      if (bName && bName !== 'Franchisee ' && bName !== 'Franchisee') {
+        const found = ACTIVE.find(a => a.n === bName);
+        if (found) found.b = true;
+      }
+    }
+  }
+}
+
+async function loadIdle() {
+  const rows = await fetchSheet('Idle');
+  if (rows.length < 4) return;
+  const hdr = rows[2];
+  const iName = hdr.findIndex(h => h.toLowerCase().includes('franchisee'));
+  const iState = colIndex(hdr, 'State');
+  const iDate = colIndex(hdr, 'Signing Date');
+  const iFA = hdr.findIndex(h => h.toLowerCase().startsWith('fa'));
+
+  IDLE = [];
+  for (let i = 3; i < rows.length; i++) {
+    const row = rows[i];
+    const name = row[iName];
+    if (!name || name.toLowerCase().includes('franchisee')) continue;
+    const fa = iFA >= 0 ? (parseInt(row[iFA]) || 0) : 0;
+    if (!name && fa === 0) continue;
+    IDLE.push({
+      n: name,
+      s: iState >= 0 ? row[iState] : '',
+      fa: fa,
+      d: iDate >= 0 ? row[iDate] : '',
+      f: ''
+    });
+  }
+}
+
+async function loadNeverOpen() {
+  const rows = await fetchSheet('Never Open');
+  if (rows.length < 4) return;
+  const hdr = rows[2];
+  const iName = hdr.findIndex(h => h.toLowerCase().includes('franchisee'));
+  const iState = colIndex(hdr, 'State');
+  const iDate = colIndex(hdr, 'Signing Date');
+  const iFA = hdr.findIndex(h => h.toLowerCase().startsWith('fa'));
+
+  NGTO = [];
+  for (let i = 3; i < rows.length; i++) {
+    const row = rows[i];
+    const name = row[iName];
+    if (!name || name.toLowerCase().includes('franchisee')) continue;
+    const fa = iFA >= 0 ? (parseInt(row[iFA]) || 0) : 0;
+    NGTO.push({
+      n: name,
+      s: iState >= 0 ? row[iState] : '',
+      fa: fa,
+      d: iDate >= 0 ? row[iDate] : '',
+      f: ''
+    });
+  }
+}
+
+
+
+
+
+
+
+// ── UI HELPERS ──
+function showLoading(on) {
+  let el = document.getElementById('loading-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loading-overlay';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(247,241,232,.92);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:inherit';
+    el.innerHTML = `<div style="font-size:32px">☕</div><div style="font-size:16px;font-weight:600;color:#441D1F">Loading from Google Sheets…</div><div style="font-size:13px;color:#7A3A3D;opacity:.7">Fetching latest franchise data</div>`;
+    document.body.appendChild(el);
+  }
+  el.style.display = on ? 'flex' : 'none';
+}
+
+function showError(msg) {
+  let el = document.getElementById('loading-overlay');
+  if (el) {
+    el.style.display = 'flex';
+    el.innerHTML = `<div style="font-size:32px">⚠️</div><div style="font-size:16px;font-weight:600;color:#C05530">Connection Error</div><div style="font-size:13px;color:#441D1F;max-width:400px;text-align:center;white-space:pre-wrap">${msg}</div><button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;background:#441D1F;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">Retry</button>`;
+  }
+}
+
+
+// ── HELPERS ──
+const NOW=new Date('2026-04-29');
+
+
+function priClass(p){const m={A:'pA',B:'pB',C:'pC',F:'pF'};return m[p]||'bn'}
+
+
+
+
+let ss={};
+
+
+// ── BUILD COMPONENTS ──
+
+
+
+function renderDashboard(){
+  updateKPIs();
+  init();
+  showTab('sno');
+}
+
+function updateKPIs(){
+  const setEl = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+  // Summary bar
+  setEl('sb-sno',      KPI.sno         || 154);
+  setEl('sb-open',     KPI.openStores  || 108);
+  setEl('sb-construct',KPI.construct   || 6);
+  setEl('sb-planning', KPI.planning    || 29);
+  setEl('sb-fas',      KPI.totalFAs    || 342);
+  // Tab badges
+  setEl('badge-sno',   KPI.sno         || 154);
+  setEl('badge-open',  KPI.openStores  || 108);
+}
+
+
+
+function init(){
+  // Tables removed from DOM — no rendering needed.
+}
+loadAllData();
+
+// ── CONTRACTS ──
+let CONTRACTS = [];
+let contractIdCounter = 1;
+let editingContractId = null;
+
+const CONTRACT_DEFAULTS = [
+  {id:1,franchisee:'Patel, C.D.',       state:'IL',strength:'Medium',execDate:'2026-02-04',notes:''},
+  {id:2,franchisee:'Panjwani.Attawala', state:'GA',strength:'Strong', execDate:'2026-02-19',notes:''},
+  {id:3,franchisee:'Panjwani.Attawala', state:'GA',strength:'Strong', execDate:'2026-03-11',notes:''},
+  {id:4,franchisee:'Panjwani.Attawala', state:'GA',strength:'Strong', execDate:'2026-03-12',notes:''},
+  {id:5,franchisee:'Panjwani.Attawala', state:'GA',strength:'Strong', execDate:'2026-03-19',notes:''},
+  {id:6,franchisee:'Elkahwaji.Van Werden',state:'NE',strength:'Strong',execDate:'2026-03-30',notes:''}
+];
+
+async function loadContracts() {
+  CONTRACTS = [...CONTRACT_DEFAULTS];
+  renderContracts();
+  if (!ROCKS_API_URL) return;
+  try {
+    const res  = await fetch(ROCKS_API_URL + '?type=contracts');
+    const data = await res.json();
+    if (data.success && data.contracts && data.contracts.length > 0) {
+      CONTRACTS = data.contracts.map(c => ({
+        id:         parseInt(c.ID) || contractIdCounter++,
+        franchisee: c.Franchisee  || '',
+        state:      c.State       || '',
+        strength:   c.Strength    || '',
+        execDate:   c['Exec Date'] || '',
+        notes:      c.Notes       || ''
+      }));
+      contractIdCounter = Math.max(...CONTRACTS.map(c=>c.id), 0) + 1;
+      renderContracts();
+    } else { Promise.all(CONTRACT_DEFAULTS.map(c => saveContractToSheet({...c}, 'add'))); }
+  } catch(e) { console.warn('Contracts load error:', e); }
+}
+
+async function saveContractToSheet(c, action) {
+  if (!ROCKS_API_URL) return;
+  try {
+    await fetch(ROCKS_API_URL, {
+      method:'POST',
+      body: JSON.stringify({ type:'contracts', action,
+        id:c.id, franchisee:c.franchisee, state:c.state,
+        strength:c.strength, execDate:c.execDate, notes:c.notes })
+    });
+  } catch(e) { console.warn('Contract save error:', e); }
+}
+
+function renderContracts() {
+  const grid = document.getElementById('contracts-grid');
+  const subtitle = document.getElementById('contracts-subtitle');
+  if (!grid) return;
+
+  // Update KPI card
+  const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  setEl('kpi-contracts', CONTRACTS.length);
+
+  // Subtitle
+  const weak   = CONTRACTS.filter(c=>c.strength==='Weak').length;
+  const medium = CONTRACTS.filter(c=>c.strength==='Medium').length;
+  const strong = CONTRACTS.filter(c=>c.strength==='Strong').length;
+  if (subtitle) subtitle.innerHTML =
+    `${CONTRACTS.length} contract${CONTRACTS.length!==1?'s':''} executed &nbsp;·&nbsp; ` +
+    `<span style="color:#D86040;font-weight:700">${weak}W</span> &nbsp;` +
+    `<span style="color:var(--tan-dk);font-weight:700">${medium}M</span> &nbsp;` +
+    `<span style="color:var(--green);font-weight:700">${strong}S</span>`;
+
+  const emptyEl = document.getElementById('contracts-empty');
+  if (CONTRACTS.length === 0) {
+    grid.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  const strengthColor = s => s==='Weak'?'#D86040':s==='Medium'?'var(--tan-dk)':s==='Strong'?'var(--green)':'#aaa';
+  const strengthBg    = s => s==='Weak'?'#FAECE7':s==='Medium'?'#FAEEDA':s==='Strong'?'#EAF3DE':'#F1EFE8';
+
+  // Sort by date
+  const sorted = [...CONTRACTS].sort((a,b) => new Date(a.execDate) - new Date(b.execDate));
+
+  grid.innerHTML = sorted.map(c => {
+    let dateStr = '—';
+    if (c.execDate) {
+      try {
+        // Handle Google Sheets serial numbers, ISO strings, and other formats
+        let d;
+        const raw = String(c.execDate).trim();
+        if (/^\d{5}$/.test(raw)) {
+          // Google Sheets serial number (days since 1899-12-30)
+          d = new Date((parseInt(raw) - 25569) * 86400 * 1000);
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          d = new Date(raw + 'T00:00:00');
+        } else {
+          d = new Date(raw);
+        }
+        if (!isNaN(d)) dateStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      } catch(e) { dateStr = String(c.execDate).slice(0,10); }
+    }
+    return `<div onclick="openEditContract(${c.id})" style="background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:.85rem 1rem;cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--amber-lt)'" onmouseout="this.style.background='var(--card)'">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:600;color:var(--brown)">${c.franchisee}</span>
+        ${c.strength ? `<span style="font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px;background:${strengthBg(c.strength)};color:${strengthColor(c.strength)}">${c.strength}</span>` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--brown-muted)">
+        <span class="badge bst">${c.state}</span>
+        <span>📅 ${dateStr}</span>
+        ${c.notes ? `<span style="color:var(--blue-dk)">· ${c.notes}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAddContract() {
+  editingContractId = null;
+  document.getElementById('contracts-modal-title').textContent = 'Add Executed Contract';
+  document.getElementById('ct-id').value = '';
+  document.getElementById('ct-franchisee').value = '';
+  document.getElementById('ct-state').value = '';
+  document.getElementById('ct-strength').value = '';
+  document.getElementById('ct-notes').value = '';
+  // Default to today
+  document.getElementById('ct-execdate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('ct-delete-btn').style.display = 'none';
+  document.getElementById('contracts-modal').classList.add('open');
+}
+
+function openEditContract(id) {
+  editingContractId = id;
+  const c = CONTRACTS.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('contracts-modal-title').textContent = 'Edit Contract';
+  document.getElementById('ct-id').value         = c.id;
+  document.getElementById('ct-franchisee').value = c.franchisee;
+  document.getElementById('ct-state').value      = c.state;
+  document.getElementById('ct-strength').value   = c.strength;
+  document.getElementById('ct-notes').value      = c.notes || '';
+  let dateVal = '';
+  if (c.execDate) {
+    try { dateVal = new Date(c.execDate+'T00:00:00').toISOString().slice(0,10); } catch(e) { dateVal = c.execDate.slice(0,10); }
+  }
+  document.getElementById('ct-execdate').value   = dateVal;
+  document.getElementById('ct-delete-btn').style.display = 'inline-block';
+  document.getElementById('contracts-modal').classList.add('open');
+}
+
+async function saveContract() {
+  const franchisee = document.getElementById('ct-franchisee').value.trim();
+  if (!franchisee) { document.getElementById('ct-franchisee').focus(); return; }
+  const data = {
+    franchisee,
+    state:    document.getElementById('ct-state').value.trim().toUpperCase(),
+    strength: document.getElementById('ct-strength').value,
+    execDate: document.getElementById('ct-execdate').value,
+    notes:    document.getElementById('ct-notes').value.trim()
+  };
+  if (editingContractId !== null) {
+    const c = CONTRACTS.find(x => x.id === editingContractId);
+    if (c) { Object.assign(c, data); await saveContractToSheet(c, 'update'); }
+  } else {
+    const newC = { id: contractIdCounter++, ...data };
+    CONTRACTS.push(newC);
+    await saveContractToSheet(newC, 'add');
+  }
+  closeContractsModal();
+  renderContracts();
+}
+
+async function deleteContract() {
+  if (editingContractId === null) return;
+  await saveContractToSheet({ id: editingContractId }, 'delete');
+  CONTRACTS = CONTRACTS.filter(x => x.id !== editingContractId);
+  closeContractsModal();
+  renderContracts();
+}
+
+function closeContractsModal() {
+  document.getElementById('contracts-modal').classList.remove('open');
+  editingContractId = null;
+}
+
+(document.getElementById('contracts-modal')||{addEventListener:()=>{}}).addEventListener('click', function(e) {
+  if (e.target === this) closeContractsModal();
+});
+
+// ── SETTINGS ──
+let SETTINGS = { Budget2026: 19 };
+
+async function loadSettings() {
+  if (!ROCKS_API_URL) return;
+  try {
+    const res  = await fetch(ROCKS_API_URL + '?type=settings');
+    const data = await res.json();
+    if (data.success && data.settings) {
+      SETTINGS = { ...SETTINGS, ...data.settings };
+      renderSettings();
+    }
+  } catch(e) { console.warn('Settings load error:', e); }
+}
+
+function renderSettings() {
+  const el = document.getElementById('budget-label');
+  if (el) el.textContent = SETTINGS.Budget2026 + ' in 2026 budget';
+}
+
+function openBudgetEdit() {
+  const current = SETTINGS.Budget2026 || 19;
+  const val = prompt('2026 Budget Target (number of FAs):', current);
+  if (val === null) return; // cancelled
+  const num = parseInt(val);
+  if (isNaN(num) || num < 0) { alert('Please enter a valid number.'); return; }
+  SETTINGS.Budget2026 = num;
+  renderSettings();
+  // Save to Google Sheet
+  if (ROCKS_API_URL) {
+    fetch(ROCKS_API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ type:'settings', action:'update', key:'Budget2026', value:num })
+    }).catch(e => console.warn('Settings save error:', e));
+  }
+}
+
+// ── ROCKS ──
+// Apps Script URL — set this after deploying the Apps Script
+let ROCKS_API_URL = localStorage.getItem('ziggis_rocks_api_url') || 'https://script.google.com/macros/s/AKfycbxp_b1gnw6mJKkLwjDz082rv21qYKFjZFxTNWgrH4oIpYdCozdCc6MxfeGyXtJrn0iM5Q/exec';
+
+let ROCKS = [];
+let rockIdCounter = 1;
+let editingId = null;
+
+const CAT_MAP = {
+  'SNO':                   { listId:'rock-list-sno',    emptyId:'rock-empty-sno',    progId:'cat-sno-progress',    color:'#72B1CB' },
+  'Open Stores':           { listId:'rock-list-open',   emptyId:'rock-empty-open',   progId:'cat-open-progress',   color:'#4E9260' },
+  'Resale':                { listId:'rock-list-resale', emptyId:'rock-empty-resale', progId:'cat-resale-progress', color:'#CFA571' },
+  'Real Estate Committee': { listId:'rock-list-rec',    emptyId:'rock-empty-rec',    progId:'cat-rec-progress',    color:'#C05530' }
+};
+
+const STATUS = {
+  new:  { label:'Not Started', dot:'rsd-new',  prog:'#CCC'     },
+  on:   { label:'On Track',    dot:'rsd-on',   prog:'#4E9260'  },
+  off:  { label:'Off Track',   dot:'rsd-off',  prog:'#C05530'  },
+  done: { label:'Complete',    dot:'rsd-done', prog:'#7B5EA7'  }
+};
+
+// ── API CALLS ──
+async function loadRocks() {
+  if (!ROCKS_API_URL) { renderRocks(); return; }
+  try {
+    const res = await fetch(ROCKS_API_URL);
+    const data = await res.json();
+    if (data.success && data.rocks) {
+      ROCKS = data.rocks.map(r => ({
+        id:       parseInt(r.ID) || rockIdCounter++,
+        cat:      r.Category || '',
+        title:    r.Title || '',
+        owner:    r.Owner || '',
+        due:      r['Due Date'] || '',
+        status:   r.Status || 'new',
+        progress: parseInt(r.Progress) || 0,
+        notes:    r.Notes || ''
+      }));
+      // set counter above highest id
+      rockIdCounter = Math.max(...ROCKS.map(r => r.id), 0) + 1;
+    }
+  } catch(e) {
+    console.warn('Could not load rocks:', e);
+  }
+  renderRocks();
+}
+
+async function saveRockToSheet(rock, action) {
+  if (!ROCKS_API_URL) return;
+  try {
+    await fetch(ROCKS_API_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action,
+        id:       rock.id,
+        cat:      rock.cat,
+        title:    rock.title,
+        owner:    rock.owner,
+        due:      rock.due,
+        status:   rock.status,
+        progress: rock.progress,
+        notes:    rock.notes
+      })
+    });
+  } catch(e) {
+    console.warn('Could not save rock:', e);
+  }
+}
+
+async function deleteRockFromSheet(id) {
+  if (!ROCKS_API_URL) return;
+  try {
+    await fetch(ROCKS_API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'delete', id })
+    });
+  } catch(e) {
+    console.warn('Could not delete rock:', e);
+  }
+}
+
+// ── ROCKS SETUP PROMPT ──
+function checkRocksSetup() {
+  if (!ROCKS_API_URL) {
+    const banner = document.getElementById('rocks-setup-banner');
+    if (banner) banner.style.display = 'block';
+  }
+}
+
+function saveApiUrl() {
+  const url = document.getElementById('rocks-api-input').value.trim();
+  if (!url || !url.includes('script.google.com')) {
+    alert('Please paste a valid Google Apps Script URL.');
+    return;
+  }
+  ROCKS_API_URL = url;
+  localStorage.setItem('ziggis_rocks_api_url', url);
+  document.getElementById('rocks-setup-banner').style.display = 'none';
+  loadRocks();
+}
+
+// ── RENDER ──
+function renderRocks() {
+  const cats = Object.keys(CAT_MAP);
+  let total=0, on=0, off=0, done=0, progSum=0;
+
+  cats.forEach(cat => {
+    const { listId, emptyId, progId } = CAT_MAP[cat];
+    const catRocks = ROCKS.filter(r => r.cat === cat);
+    const listEl  = document.getElementById(listId);
+    const emptyEl = document.getElementById(emptyId);
+    const progEl  = document.getElementById(progId);
+    if (!listEl) return;
+
+    total += catRocks.length;
+    on    += catRocks.filter(r=>r.status==='on').length;
+    off   += catRocks.filter(r=>r.status==='off').length;
+    done  += catRocks.filter(r=>r.status==='done').length;
+    progSum += catRocks.reduce((s,r)=>s+(r.progress||0),0);
+
+    if (catRocks.length === 0) {
+      listEl.innerHTML = '';
+      emptyEl.style.display = 'block';
+      progEl.innerHTML = '';
+      return;
+    }
+    emptyEl.style.display = 'none';
+
+    const catDone = catRocks.filter(r=>r.status==='done').length;
+    const catOn   = catRocks.filter(r=>r.status==='on').length;
+    const catOff  = catRocks.filter(r=>r.status==='off').length;
+    const pct = Math.round(catRocks.reduce((s,r)=>s+(r.progress||0),0)/catRocks.length);
+    const pctColor = pct>=75?'#4E9260':pct>=40?'#A07840':'#C05530';
+
+    progEl.innerHTML = `
+      <div class="rock-cat-prog-labels">
+        <span>${catRocks.length} rock${catRocks.length!==1?'s':''} · ${catOn} on track · ${catOff} off track · ${catDone} complete</span>
+        <span style="font-weight:700;color:${pctColor}">${pct}% avg progress</span>
+      </div>
+      <div class="rock-cat-prog-bar">
+        <div class="rock-cat-prog-fill" style="width:${pct}%;background:${pctColor}"></div>
+      </div>`;
+
+    listEl.innerHTML = catRocks.map(r => {
+      const s = STATUS[r.status] || STATUS.new;
+      const prog = Math.min(100, r.progress||0);
+      const dueStr = r.due ? new Date(r.due+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+      const dl = r.due ? Math.round((new Date(r.due+'T00:00:00')-new Date())/86400000) : null;
+      const dueColor = dl!==null&&dl<0?'#C05530':dl!==null&&dl<=14?'#A07840':'#888';
+      return `<div class="rock-item" onclick="openEditRock(${r.id})">
+        <div class="rock-item-left">
+          <div class="rock-status-dot ${s.dot}" title="${s.label}"></div>
+        </div>
+        <div class="rock-item-body">
+          <div class="rock-item-title">${r.title}</div>
+          <div class="rock-item-meta">
+            ${r.owner?`<span class="rock-item-owner">👤 ${r.owner}</span>`:''}
+            ${dueStr?`<span class="rock-item-due" style="color:${dueColor}">📅 ${dueStr}${dl!==null?(dl<0?' · overdue':dl<=14?` · ${dl}d left`:''):''}</span>`:''}
+            <span style="font-size:11px;padding:1px 6px;border-radius:3px;background:${s.dot==='rsd-on'?'#EAF3DE':s.dot==='rsd-off'?'#FFF0EB':s.dot==='rsd-done'?'#F0EBF8':'#F1EFE8'};color:${s.prog};font-weight:600">${s.label}</span>
+          </div>
+          ${r.notes?`<div class="rock-item-notes">${r.notes}</div>`:''}
+          <div class="rock-item-prog">
+            <div class="rock-mini-track"><div class="rock-mini-fill" style="width:${prog}%;background:${s.prog}"></div></div>
+            <span class="rock-mini-pct">${prog}%</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  });
+
+  // Update KPIs
+  const pct = total>0?Math.round(done/total*100):null;
+  const setEl = (id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setEl('r-total', total);
+  setEl('r-on', on);
+  setEl('r-off', off);
+  setEl('r-done', done);
+  setEl('r-pct', pct!==null?pct+'%':'—');
+}
+
+// ── ADD / EDIT / DELETE ──
+function openAddRock(cat) {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'Add Rock — ' + cat;
+  document.getElementById('edit-rock-id').value = '';
+  document.getElementById('edit-rock-title').value = '';
+  document.getElementById('edit-rock-cat').value = cat;
+  document.getElementById('edit-rock-owner').value = '';
+  document.getElementById('edit-rock-status').value = 'new';
+  document.getElementById('edit-rock-progress').value = 0;
+  document.getElementById('edit-rock-progress-range').value = 0;
+  document.getElementById('edit-rock-notes').value = '';
+  const d90 = new Date(); d90.setDate(d90.getDate()+90);
+  document.getElementById('edit-rock-due').value = d90.toISOString().slice(0,10);
+  document.getElementById('modal-delete-btn').style.display = 'none';
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function openEditRock(id) {
+  editingId = id;
+  const r = ROCKS.find(x=>x.id===id);
+  if (!r) return;
+  document.getElementById('modal-title').textContent = 'Edit Rock';
+  document.getElementById('edit-rock-id').value = r.id;
+  document.getElementById('edit-rock-title').value = r.title;
+  document.getElementById('edit-rock-cat').value = r.cat;
+  document.getElementById('edit-rock-owner').value = r.owner||'';
+  document.getElementById('edit-rock-due').value = r.due||'';
+  document.getElementById('edit-rock-status').value = r.status;
+  document.getElementById('edit-rock-progress').value = r.progress||0;
+  document.getElementById('edit-rock-progress-range').value = r.progress||0;
+  document.getElementById('edit-rock-notes').value = r.notes||'';
+  document.getElementById('modal-delete-btn').style.display = 'inline-block';
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+async function saveRock() {
+  const title = document.getElementById('edit-rock-title').value.trim();
+  if (!title) { document.getElementById('edit-rock-title').focus(); return; }
+  const data = {
+    cat:      document.getElementById('edit-rock-cat').value,
+    title,
+    owner:    document.getElementById('edit-rock-owner').value.trim(),
+    due:      document.getElementById('edit-rock-due').value,
+    status:   document.getElementById('edit-rock-status').value,
+    progress: parseInt(document.getElementById('edit-rock-progress').value)||0,
+    notes:    document.getElementById('edit-rock-notes').value.trim()
+  };
+  if (editingId !== null) {
+    const r = ROCKS.find(x=>x.id===editingId);
+    if (r) { Object.assign(r, data); await saveRockToSheet(r, 'update'); }
+  } else {
+    const newRock = { id: rockIdCounter++, ...data };
+    ROCKS.push(newRock);
+    await saveRockToSheet(newRock, 'add');
+  }
+  closeModal();
+  renderRocks();
+}
+
+async function deleteRock() {
+  if (editingId===null) return;
+  await deleteRockFromSheet(editingId);
+  ROCKS = ROCKS.filter(x=>x.id!==editingId);
+  closeModal();
+  renderRocks();
+}
+
+function closeModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+  editingId = null;
+}
+
+(document.getElementById('edit-modal')||{addEventListener:()=>{}}).addEventListener('click', function(e){
+  if (e.target===this) closeModal();
+});
+
+// ── FINANCE STRENGTH ──
+
+
+
+
+// ── FINANCE STRENGTH ──
+// Source: Site Selection tab
+// Total SNO = rows where Search (col L) > 0
+// Active    = rows where Active FA (col M) > 0
+// Idle      = rows where Idle (col Z) > 0
+// NGTO      = rows where Will never Open (col Y) > 0
+// Strength  = Financial Strength column (col AB): "1 - weak", "2 - medium", "3 - strong"
+
+
+
+
+
+// ── SNO ──
+const SNO_DEFAULTS = [
+  {id:400,name:'Abushawish, Mohammad',state:'TX',fa:1,strength:'Weak',category:'NGTO',signDate:'2021-07-27',notes:''},
+  {id:401,name:'Adams, Tori',state:'CO',fa:1,strength:'Medium',category:'Idle',signDate:'2022-03-03',notes:''},
+  {id:402,name:'Adams, Tori',state:'CO',fa:1,strength:'Medium',category:'Idle',signDate:'2022-03-03',notes:''},
+  {id:403,name:'Ahmed, Munmun',state:'FL',fa:1,strength:'Weak',category:'NGTO',signDate:'2021-11-01',notes:''},
+  {id:404,name:'Albarran, Juan',state:'TX',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-08-21',notes:''},
+  {id:405,name:'Anderson, B&A',state:'TX',fa:1,strength:'Medium',category:'Active',signDate:'',notes:''},
+  {id:406,name:'Andrew.Smith.Gilroy',state:'FL',fa:1,strength:'Weak',category:'NGTO',signDate:'2022-06-15',notes:''},
+  {id:407,name:'Anglo, Noushin',state:'FL',fa:1,strength:'Medium',category:'Active',signDate:'',notes:''},
+  {id:408,name:'Arora.Patel',state:'NJ',fa:1,strength:'Weak',category:'Idle',signDate:'2024-12-12',notes:''},
+  {id:409,name:'Barrass, Jerry/Bunting, Alysa',state:'IL',fa:1,strength:'Strong',category:'NGTO',signDate:'2024-03-22',notes:''},
+  {id:410,name:'Barrass, Jerry/Bunting, Alysa',state:'IL',fa:1,strength:'Strong',category:'NGTO',signDate:'2024-03-22',notes:''},
+  {id:411,name:'Barrass, Jerry/Bunting, Alysa',state:'IL',fa:1,strength:'Strong',category:'NGTO',signDate:'2024-03-22',notes:''},
+  {id:412,name:'Barrass, Jerry/Bunting, Alysa',state:'IL',fa:1,strength:'Strong',category:'NGTO',signDate:'2024-03-22',notes:''},
+  {id:413,name:'Barrass, Jerry/Bunting, Alysa',state:'IL',fa:1,strength:'Strong',category:'NGTO',signDate:'2024-03-22',notes:''},
+  {id:414,name:'Barrass, Jerry/Bunting, Alysa',state:'IL',fa:1,strength:'Strong',category:'NGTO',signDate:'2024-03-22',notes:''},
+  {id:415,name:'Barrass, Jerry/Bunting, Alysa',state:'IL',fa:1,strength:'Strong',category:'NGTO',signDate:'2024-03-22',notes:''},
+  {id:416,name:'Barrass, Jerry/Bunting, Alysa',state:'IL',fa:1,strength:'Strong',category:'NGTO',signDate:'2024-03-22',notes:''},
+  {id:417,name:'Barrass, Jerry/Bunting, Alysa',state:'IL',fa:1,strength:'Strong',category:'NGTO',signDate:'2024-03-22',notes:''},
+  {id:418,name:'Barrett, James',state:'NH',fa:1,strength:'Medium',category:'Active',signDate:'',notes:''},
+  {id:419,name:'Berkey, Tanner',state:'SC',fa:1,strength:'Weak',category:'Idle',signDate:'2022-04-14',notes:''},
+  {id:420,name:'Best, Kristin',state:'FL',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-03-03',notes:''},
+  {id:421,name:'Bhonhariya, Rahim',state:'NC',fa:1,strength:'Medium',category:'Idle',signDate:'2022-11-28',notes:''},
+  {id:422,name:'Boe.Klein',state:'WI',fa:1,strength:'Medium',category:'Active',signDate:'',notes:''},
+  {id:423,name:'Boyer, Aric',state:'MI',fa:1,strength:'Medium',category:'NGTO',signDate:'2022-06-07',notes:''},
+  {id:424,name:'Boyer, Aric',state:'MI',fa:1,strength:'Medium',category:'NGTO',signDate:'2022-06-07',notes:''},
+  {id:425,name:'Boyer, Aric',state:'MI',fa:1,strength:'Medium',category:'NGTO',signDate:'2022-06-07',notes:''},
+  {id:426,name:'Brady, Bambi',state:'CO',fa:1,strength:'Medium',category:'Idle',signDate:'2022-02-11',notes:''},
+  {id:427,name:'Brady, Bambi',state:'CO',fa:1,strength:'Medium',category:'Idle',signDate:'2022-02-11',notes:''},
+  {id:428,name:'Brenneman.Dameron',state:'MO',fa:1,strength:'Strong',category:'Idle',signDate:'2022-12-09',notes:''},
+  {id:429,name:'Burger, Joey',state:'AZ',fa:1,strength:'Weak',category:'NGTO',signDate:'2019-02-20',notes:''},
+  {id:430,name:'Burkhart, Matt',state:'IA',fa:1,strength:'Strong',category:'Active',signDate:'2025-06-17',notes:''},
+  {id:431,name:'Burkhart, Matt',state:'IA',fa:1,strength:'Strong',category:'Idle',signDate:'2025-06-17',notes:''},
+  {id:432,name:'Burrows, Barbara',state:'IL',fa:1,strength:'Medium',category:'Idle',signDate:'2020-12-07',notes:''},
+  {id:433,name:'Campbell, Jacob',state:'CA',fa:1,strength:'Weak',category:'Active',signDate:'',notes:''},
+  {id:434,name:'Cazares, Denise',state:'CO',fa:1,strength:'Weak',category:'NGTO',signDate:'2021-11-18',notes:''},
+  {id:435,name:'Cazares, Denise',state:'CO',fa:1,strength:'Weak',category:'NGTO',signDate:'2021-11-18',notes:''},
+  {id:436,name:'Clark, Niome',state:'MO',fa:1,strength:'Strong',category:'Active',signDate:'2023-12-21',notes:''},
+  {id:437,name:'Clark, Niome',state:'MO',fa:1,strength:'Strong',category:'Idle',signDate:'2023-12-21',notes:''},
+  {id:438,name:'Current, Micah',state:'CO',fa:1,strength:'Weak',category:'NGTO',signDate:'2022-08-11',notes:''},
+  {id:439,name:'Current, Micah',state:'CO',fa:1,strength:'Weak',category:'NGTO',signDate:'2022-08-11',notes:''},
+  {id:440,name:'Daniels, Robin & Tom',state:'FL',fa:1,strength:'Weak',category:'Idle',signDate:'2023-08-25',notes:''},
+  {id:441,name:'Daniels, Robin & Tom',state:'FL',fa:1,strength:'Weak',category:'Idle',signDate:'2023-08-25',notes:''},
+  {id:442,name:'Daniels, Robin & Tom',state:'FL',fa:1,strength:'Weak',category:'Idle',signDate:'2023-08-25',notes:''},
+  {id:443,name:'Ecklund, Scott',state:'OK',fa:1,strength:'Medium',category:'NGTO',signDate:'2023-01-27',notes:''},
+  {id:444,name:'Enuma.Okafor',state:'GA',fa:1,strength:'Weak',category:'NGTO',signDate:'2021-11-19',notes:''},
+  {id:445,name:'Fountain.Cagle',state:'AK',fa:1,strength:'Medium',category:'NGTO',signDate:'2023-03-22',notes:''},
+  {id:446,name:'Fourzan, Carlos',state:'NM',fa:1,strength:'Medium',category:'Idle',signDate:'2025-08-05',notes:''},
+  {id:447,name:'Franklin.Lepine',state:'OK',fa:1,strength:'Strong',category:'NGTO',signDate:'2022-02-17',notes:''},
+  {id:448,name:'Franklin.Lepine',state:'OK',fa:1,strength:'Strong',category:'NGTO',signDate:'2022-02-17',notes:''},
+  {id:449,name:'Franklin.Lepine',state:'OK',fa:1,strength:'Strong',category:'NGTO',signDate:'2022-02-17',notes:''},
+  {id:450,name:'Garrison, Randy',state:'FL',fa:1,strength:'Strong',category:'Active',signDate:'2021-06-28',notes:''},
+  {id:451,name:'Garrison, Randy',state:'FL',fa:1,strength:'Strong',category:'Idle',signDate:'2021-06-28',notes:''},
+  {id:452,name:'Gensburg, Will',state:'CO',fa:1,strength:'Medium',category:'NGTO',signDate:'2021-01-27',notes:''},
+  {id:453,name:'Goodman, Keith',state:'CA',fa:1,strength:'Medium',category:'NGTO',signDate:'2020-05-21',notes:''},
+  {id:454,name:'Goodman, Keith',state:'CA',fa:1,strength:'Medium',category:'NGTO',signDate:'2020-05-21',notes:''},
+  {id:455,name:'Goodman, Keith',state:'CA',fa:1,strength:'Medium',category:'NGTO',signDate:'2020-05-21',notes:''},
+  {id:456,name:'Greene, Mike',state:'LA',fa:1,strength:'Weak',category:'Idle',signDate:'2024-06-12',notes:''},
+  {id:457,name:'Griffitts, Eric',state:'NE',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-09-22',notes:''},
+  {id:458,name:'Harris, Michael',state:'NE',fa:1,strength:'Medium',category:'Idle',signDate:'2021-02-11',notes:''},
+  {id:459,name:'Harris, Michael',state:'NE',fa:1,strength:'Medium',category:'Idle',signDate:'2021-02-11',notes:''},
+  {id:460,name:'Heltsley.Singleton',state:'IN',fa:1,strength:'Strong',category:'NGTO',signDate:'2021-10-08',notes:''},
+  {id:461,name:'Heltsley.Singleton',state:'IN',fa:1,strength:'Strong',category:'NGTO',signDate:'2021-10-08',notes:''},
+  {id:462,name:'Hergenreder, Ryan',state:'NE',fa:1,strength:'Weak',category:'NGTO',signDate:'2021-09-24',notes:''},
+  {id:463,name:'Hossain, Mohammed',state:'TX',fa:1,strength:'Weak',category:'Active',signDate:'',notes:''},
+  {id:464,name:'Hunsinger, Dana',state:'CO',fa:1,strength:'Strong',category:'Idle',signDate:'2020-04-08',notes:''},
+  {id:465,name:'Hunsinger, Dana',state:'CO',fa:1,strength:'Strong',category:'Idle',signDate:'2020-04-08',notes:''},
+  {id:466,name:'Jones, Claude',state:'CA',fa:1,strength:'Weak',category:'NGTO',signDate:'2018-08-10',notes:''},
+  {id:467,name:'Julian, James',state:'CO',fa:1,strength:'Medium',category:'Active',signDate:'2026-04-29',notes:''},
+  {id:468,name:'Kemp, John',state:'NC',fa:1,strength:'Strong',category:'NGTO',signDate:'2021-06-15',notes:''},
+  {id:469,name:'Kemp, John',state:'NC',fa:1,strength:'Strong',category:'NGTO',signDate:'2021-06-15',notes:''},
+  {id:470,name:'Knudsen.Palinkas',state:'PA',fa:1,strength:'Weak',category:'Idle',signDate:'2018-02-01',notes:''},
+  {id:471,name:'Kroger, Lindsey',state:'NE',fa:1,strength:'Medium',category:'Idle',signDate:'2021-05-13',notes:''},
+  {id:472,name:'Kroger, Lindsey',state:'NE',fa:1,strength:'Medium',category:'Idle',signDate:'2021-05-13',notes:''},
+  {id:473,name:'Kumar, Ashwani',state:'WA',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-06-06',notes:''},
+  {id:474,name:'Kumar, Ashwani',state:'WA',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-06-06',notes:''},
+  {id:475,name:'Kumar, Ashwani',state:'WA',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-06-06',notes:''},
+  {id:476,name:'Kumar, Ashwani',state:'WA',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-06-06',notes:''},
+  {id:477,name:'Kumar, Ashwani',state:'WA',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-06-06',notes:''},
+  {id:478,name:'Kumar, Ashwani',state:'WA',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-06-06',notes:''},
+  {id:479,name:'Kumar, Ashwani',state:'WA',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-06-06',notes:''},
+  {id:480,name:'Kumar, Ashwani',state:'WA',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-06-06',notes:''},
+  {id:481,name:'Kurian, Densu',state:'MD',fa:1,strength:'Weak',category:'Active',signDate:'2025-10-07',notes:''},
+  {id:482,name:'Lane, Floyd',state:'TX',fa:1,strength:'Strong',category:'NGTO',signDate:'2023-09-06',notes:''},
+  {id:483,name:'Lane, Floyd',state:'TX',fa:1,strength:'Strong',category:'NGTO',signDate:'2023-09-06',notes:''},
+  {id:484,name:'Lane, Floyd',state:'TX',fa:1,strength:'Strong',category:'NGTO',signDate:'2023-09-06',notes:''},
+  {id:485,name:'Lane, Floyd',state:'TX',fa:1,strength:'Strong',category:'NGTO',signDate:'2023-09-06',notes:''},
+  {id:486,name:'Lane, Floyd',state:'TX',fa:1,strength:'Strong',category:'NGTO',signDate:'2023-09-06',notes:''},
+  {id:487,name:'Lehmann, Tena',state:'WA',fa:1,strength:'Medium',category:'Idle',signDate:'2022-01-07',notes:''},
+  {id:488,name:'Malone-Montgomery, Melissa',state:'CA',fa:1,strength:'Strong',category:'Idle',signDate:'2019-06-04',notes:''},
+  {id:489,name:'McCawley, Jamie',state:'CO',fa:1,strength:'Strong',category:'Idle',signDate:'2022-01-11',notes:''},
+  {id:490,name:'Minor, Mike',state:'SD',fa:1,strength:'Strong',category:'Idle',signDate:'2022-08-23',notes:''},
+  {id:491,name:'Nemer.Weidner',state:'OK',fa:1,strength:'Strong',category:'Idle',signDate:'2021-03-12',notes:''},
+  {id:492,name:'Nemer.Weidner',state:'OK',fa:1,strength:'Strong',category:'Idle',signDate:'2021-03-12',notes:''},
+  {id:493,name:'Nezhybova, Marcela',state:'CO',fa:1,strength:'Weak',category:'NGTO',signDate:'2018-03-13',notes:''},
+  {id:494,name:'Nichols, Steve & Erin',state:'FL',fa:1,strength:'Weak',category:'Active',signDate:'',notes:''},
+  {id:495,name:'Nuti.Eyden',state:'NV',fa:1,strength:'Medium',category:'Idle',signDate:'2025-02-13',notes:''},
+  {id:496,name:'Nuti.Eyden',state:'NV',fa:1,strength:'Medium',category:'Idle',signDate:'2025-02-13',notes:''},
+  {id:497,name:'Nuti.Eyden',state:'NV',fa:1,strength:'Medium',category:'Idle',signDate:'2025-02-13',notes:''},
+  {id:498,name:'Okonoski, Paul',state:'AZ',fa:1,strength:'Medium',category:'Idle',signDate:'2019-12-27',notes:''},
+  {id:499,name:'Okonoski, Paul',state:'AZ',fa:1,strength:'Medium',category:'Idle',signDate:'2019-12-27',notes:''},
+  {id:500,name:'Okyere-Darko',state:'MD',fa:1,strength:'Medium',category:'Idle',signDate:'2024-04-12',notes:''},
+  {id:501,name:'Okyere-Darko',state:'MD',fa:1,strength:'Medium',category:'Idle',signDate:'2024-04-12',notes:''},
+  {id:502,name:'Okyere-Darko',state:'MD',fa:1,strength:'Medium',category:'Idle',signDate:'2024-04-12',notes:''},
+  {id:503,name:'Otoole, Christina',state:'IL',fa:1,strength:'Weak',category:'Active',signDate:'',notes:''},
+  {id:504,name:'Pacheco.Maloney',state:'CO',fa:1,strength:'Medium',category:'NGTO',signDate:'2021-09-12',notes:''},
+  {id:505,name:'Pannu.Singh',state:'CA',fa:1,strength:'Weak',category:'NGTO',signDate:'2022-05-26',notes:''},
+  {id:506,name:'Patel, C.D.',state:'IL',fa:1,strength:'Strong',category:'Active',signDate:'',notes:''},
+  {id:507,name:'Patel, Hiren & Kartik',state:'MO',fa:1,strength:'Weak',category:'Active',signDate:'',notes:''},
+  {id:508,name:'Perdue, Sandra',state:'OH',fa:1,strength:'Weak',category:'NGTO',signDate:'2022-10-24',notes:''},
+  {id:509,name:'Postilio.Milillo',state:'NY',fa:1,strength:'Medium',category:'Idle',signDate:'2022-08-03',notes:''},
+  {id:510,name:'Potter, Chad',state:'AL',fa:1,strength:'Medium',category:'NGTO',signDate:'2023-09-25',notes:''},
+  {id:511,name:'Ragsdale.Pfiefer',state:'CO',fa:1,strength:'Strong',category:'NGTO',signDate:'2019-09-23',notes:''},
+  {id:512,name:'Ragsdale.Pfiefer',state:'CO',fa:1,strength:'Strong',category:'NGTO',signDate:'2019-09-23',notes:''},
+  {id:513,name:'Rajagopal, Manjula',state:'MI',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-06-21',notes:''},
+  {id:514,name:'Rajagopal, Manjula',state:'MI',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-06-21',notes:''},
+  {id:515,name:'Rajagopal, Manjula',state:'MI',fa:1,strength:'Weak',category:'NGTO',signDate:'2023-06-21',notes:''},
+  {id:516,name:'Ray.Patel',state:'NJ',fa:1,strength:'Medium',category:'NGTO',signDate:'2023-04-18',notes:''},
+  {id:517,name:'Raymer, Steven',state:'FL',fa:1,strength:'Weak',category:'Active',signDate:'',notes:''},
+  {id:518,name:'Riches, Nik',state:'AZ',fa:1,strength:'Medium',category:'Idle',signDate:'2020-02-24',notes:''},
+  {id:519,name:'Riches, Nik',state:'AZ',fa:1,strength:'Medium',category:'Idle',signDate:'2020-02-24',notes:''},
+  {id:520,name:'Roberts, Garnette',state:'MI',fa:1,strength:'Weak',category:'Idle',signDate:'2023-04-27',notes:''},
+  {id:521,name:'Root.Manley',state:'TX',fa:1,strength:'Medium',category:'NGTO',signDate:'2023-09-13',notes:''},
+  {id:522,name:'Ross, Alexis',state:'AZ',fa:1,strength:'Medium',category:'NGTO',signDate:'2022-04-19',notes:''},
+  {id:523,name:'Ross, Alexis',state:'AZ',fa:1,strength:'Medium',category:'NGTO',signDate:'2022-04-19',notes:''},
+  {id:524,name:'Ross, Alexis',state:'AZ',fa:1,strength:'Medium',category:'NGTO',signDate:'2022-04-19',notes:''},
+  {id:525,name:'Russell, Brett',state:'CO',fa:1,strength:'Strong',category:'NGTO',signDate:'2020-05-15',notes:''},
+  {id:526,name:'Sadlowski, Jonathan',state:'DE',fa:1,strength:'Medium',category:'Active',signDate:'',notes:''},
+  {id:527,name:'Sandoval, Drea',state:'TX',fa:1,strength:'Strong',category:'Active',signDate:'2021-08-20',notes:''},
+  {id:528,name:'Sandoval, Drea',state:'TX',fa:1,strength:'Strong',category:'Idle',signDate:'2021-08-20',notes:''},
+  {id:529,name:'Schmidt.Koris.Harris',state:'NE',fa:1,strength:'Medium',category:'Idle',signDate:'2024-03-27',notes:''},
+  {id:530,name:'Schmidt.Koris.Harris',state:'NE',fa:1,strength:'Medium',category:'Idle',signDate:'2024-03-27',notes:''},
+  {id:531,name:'Scott, Jason',state:'MD',fa:1,strength:'Weak',category:'Idle',signDate:'2024-04-09',notes:''},
+  {id:532,name:'Seligson.Richards',state:'CO',fa:1,strength:'Medium',category:'Active',signDate:'',notes:''},
+  {id:533,name:'Senulis.Kebede',state:'CO',fa:1,strength:'Medium',category:'Idle',signDate:'2022-10-06',notes:''},
+  {id:534,name:'Senulis.Kebede',state:'CO',fa:1,strength:'Medium',category:'Idle',signDate:'2022-10-06',notes:''},
+  {id:535,name:'Senulis.Kebede',state:'CO',fa:1,strength:'Medium',category:'Idle',signDate:'2022-10-06',notes:''},
+  {id:536,name:'Shah, Vishal',state:'CA/VA',fa:1,strength:'Weak',category:'NGTO',signDate:'2021-10-20',notes:''},
+  {id:537,name:'Shrestha.Shakya.Joshi',state:'TX',fa:1,strength:'Weak',category:'Idle',signDate:'2024-09-23',notes:''},
+  {id:538,name:'Singh, Inderjit',state:'CA',fa:1,strength:'Weak',category:'Active',signDate:'2026-04-02',notes:''},
+  {id:539,name:'Sobolevsky, Alex',state:'CO',fa:1,strength:'Medium',category:'NGTO',signDate:'2022-03-29',notes:''},
+  {id:540,name:'Springer, Grant',state:'SC',fa:1,strength:'Weak',category:'Idle',signDate:'2022-08-02',notes:''},
+  {id:541,name:'Sulaj, Nina',state:'MI',fa:1,strength:'Medium',category:'Idle',signDate:'2023-11-15',notes:''},
+  {id:542,name:'Tabb, Amanda',state:'TX',fa:1,strength:'Weak',category:'Idle',signDate:'2023-04-10',notes:''},
+  {id:543,name:'Tong, Delong',state:'KS',fa:1,strength:'Weak',category:'Active',signDate:'',notes:''},
+  {id:544,name:'Townley, Tonya',state:'TX',fa:1,strength:'Medium',category:'Idle',signDate:'2024-10-31',notes:''},
+  {id:545,name:'Velardi, Joe',state:'CT',fa:1,strength:'Medium',category:'NGTO',signDate:'2021-07-31',notes:''},
+  {id:546,name:'Verones, Annette',state:'CO',fa:1,strength:'Weak',category:'NGTO',signDate:'2021-03-15',notes:''},
+  {id:547,name:'Wahid, Zoheb',state:'CA',fa:1,strength:'Medium',category:'Active',signDate:'',notes:''},
+  {id:548,name:'Yakel.Frey',state:'KS',fa:1,strength:'Strong',category:'Idle',signDate:'2023-09-25',notes:''},
+  {id:549,name:'Yeik, Dusty',state:'WY/CO',fa:1,strength:'Weak',category:'Active',signDate:'',notes:''},
+  {id:550,name:'Zohn, Shannon',state:'CO',fa:1,strength:'Medium',category:'Idle',signDate:'2024-08-01',notes:''},
+  {id:551,name:'Zohn, Shannon',state:'CO',fa:1,strength:'Medium',category:'Idle',signDate:'2024-08-01',notes:''},
+  {id:552,name:'Zohn, Shannon',state:'CO',fa:1,strength:'Medium',category:'Idle',signDate:'2024-08-01',notes:''},
+  {id:553,name:'Zula.Menegistu',state:'TX',fa:1,strength:'Weak',category:'Active',signDate:'',notes:''}
+];
+
+let SNO_DATA = [];
+let snoIdCounter = 500;
+let editingSnoId = null;
+let snoFilter = 'all';
+
+async function loadSNO() {
+  SNO_DATA = SNO_DEFAULTS.map(r=>({...r}));
+  renderSNO();
+  if (!ROCKS_API_URL) return;
+  try {
+    const res  = await fetch(ROCKS_API_URL + '?type=sno');
+    const data = await res.json();
+    if (data.success && data.franchisees && data.franchisees.length > 0) {
+      SNO_DATA = data.franchisees.map(r => ({
+        id:parseInt(r.ID)||snoIdCounter++, name:r.Name||'', state:r.State||'',
+        fa:parseInt(r.FA)||0, strength:r.Strength||'', category:r.Category||'Active',
+        signDate: (()=>{
+          const v = r['Sign Date'];
+          if (!v) return '';
+          // Handle JS Date objects returned by Google Sheets
+          try {
+            const d = new Date(v);
+            if (!isNaN(d)) return d.toISOString().slice(0,10);
+          } catch(e) {}
+          return String(v).slice(0,10);
+        })(), notes:r.Notes||''
+      }));
+      snoIdCounter = Math.max(...SNO_DATA.map(r=>r.id), 499) + 1;
+      renderSNO();
+    } else { Promise.all(SNO_DEFAULTS.map(r=>saveSNOToSheet({...r},'add'))); }
+  } catch(e) { console.warn('SNO load error:',e); }
+}
+async function saveSNOToSheet(r, action) {
+  if (!ROCKS_API_URL) return;
+  try {
+    await fetch(ROCKS_API_URL, {
+      method:'POST',
+      body: JSON.stringify({ type:'sno', action,
+        id:r.id, name:r.name, state:r.state, fa:r.fa,
+        strength:r.strength, category:r.category, signDate:r.signDate, notes:r.notes })
+    });
+  } catch(e) { console.warn('SNO save error:', e); }
+}
+
+function filterSNO(f, btn) {
+  snoFilter = f;
+  document.querySelectorAll('.rocks-filter-btn').forEach(b => b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  renderSNO();
+}
+
+function renderSNO() {
+  const filtered = snoFilter === 'all' ? SNO_DATA : SNO_DATA.filter(r => r.strength === snoFilter);
+
+  ['Active','Idle','NGTO'].forEach(cat => {
+    const catData = filtered.filter(r => r.category === cat);
+    const allCat  = SNO_DATA.filter(r => r.category === cat);
+    const listId  = 'sno-list-' + cat.toLowerCase();
+    const emptyId = 'sno-empty-' + cat.toLowerCase();
+    const progId  = 'sno-prog-' + cat.toLowerCase();
+    const listEl  = document.getElementById(listId);
+    const emptyEl = document.getElementById(emptyId);
+    const progEl  = document.getElementById(progId);
+    if (!listEl) return;
+
+    // KPI = FA count (each row = 1 FA)
+    const totalFAs = allCat.length;
+    // Count unique franchisees (not FA rows) for strength breakdown
+    const uniqueFranchisees = [...new Set(allCat.map(r=>r.name))];
+    const uniqueNames = uniqueFranchisees.length;
+    // For each unique franchisee, use their first FA's strength
+    const getStrength = name => (allCat.find(r=>r.name===name)||{}).strength||'';
+    const weak   = uniqueFranchisees.filter(n=>getStrength(n)==='Weak').length;
+    const medium = uniqueFranchisees.filter(n=>getStrength(n)==='Medium').length;
+    const strong = uniqueFranchisees.filter(n=>getStrength(n)==='Strong').length;
+    const unrated = uniqueFranchisees.filter(n=>!getStrength(n)).length;
+
+    const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+    const setHTML = (id,v) => { const el=document.getElementById(id); if(el) el.innerHTML=v; };
+    setEl(`sno-${cat.toLowerCase()}-count`, totalFAs);
+    setHTML(`sno-${cat.toLowerCase()}-sub`,
+      `${uniqueNames} franchisee${uniqueNames!==1?'s':''} &nbsp;·&nbsp; ` +
+      `<span style="color:#D86040;font-weight:700">${weak}W</span> &nbsp;` +
+      `<span style="color:var(--tan-dk);font-weight:700">${medium}M</span> &nbsp;` +
+      `<span style="color:var(--green);font-weight:700">${strong}S</span>`
+    );
+
+    if (progEl && totalFAs > 0) {
+      const wp = Math.round(weak/totalFAs*100);
+      const mp = Math.round(medium/totalFAs*100);
+      const sp = Math.round(strong/totalFAs*100);
+      progEl.innerHTML = `
+        <div class="rock-cat-prog-labels">
+          <span>${totalFAs} FA${totalFAs!==1?'s':''} · ${uniqueNames} franchisee${uniqueNames!==1?'s':''} · <span style="color:#D86040">${weak}W</span> · <span style="color:var(--tan-dk)">${medium}M</span> · <span style="color:var(--green)">${strong}S</span>${unrated?` · <span style="color:#aaa">${unrated} unrated</span>`:''}</span>
+        </div>
+        <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:4px">
+          <div style="width:${wp}%;background:#D86040"></div>
+          <div style="width:${mp}%;background:var(--tan)"></div>
+          <div style="width:${sp}%;background:var(--green)"></div>
+          <div style="width:${Math.round(unrated/totalFAs*100)}%;background:#ddd"></div>
+        </div>`;
+    }
+
+    if (catData.length === 0) {
+      listEl.innerHTML = '';
+      if (emptyEl) emptyEl.style.display = 'block';
+      return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    const strengthColor = s => s==='Weak'?'#D86040':s==='Medium'?'var(--tan-dk)':s==='Strong'?'var(--green)':'#aaa';
+    const strengthBg    = s => s==='Weak'?'#FAECE7':s==='Medium'?'#FAEEDA':s==='Strong'?'#EAF3DE':'#F1EFE8';
+
+    const yrsAgo = d => {
+      if (!d) return '';
+      const ms = new Date('2026-04-29') - new Date(d);
+      return (ms/(1000*60*60*24*365.25)).toFixed(1) + ' yr';
+    };
+
+    // Group by franchisee name
+    const grouped = {};
+    catData.forEach(r => {
+      if (!grouped[r.name]) grouped[r.name] = [];
+      grouped[r.name].push(r);
+    });
+
+    listEl.innerHTML = Object.entries(grouped).map(([name, fas]) => {
+      const rep = fas[0];
+      const faCount = fas.length;
+      const strengthBadge = rep.strength
+        ? `<span style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:4px;background:${strengthBg(rep.strength)};color:${strengthColor(rep.strength)}">${rep.strength}</span>`
+        : '<span style="font-size:10.5px;color:#aaa;font-style:italic">Not rated</span>';
+
+      if (faCount === 1) {
+        // Single FA — click card to edit directly
+        return `<div class="rock-item" onclick="openEditSNO(${rep.id})">
+          <div class="rock-item-body" style="width:100%">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div class="rock-item-title" style="margin-bottom:0">${name}</div>
+              ${strengthBadge}
+            </div>
+            <div class="rock-item-meta" style="margin-top:4px">
+              <span class="badge bst">${rep.state}</span>
+              ${rep.signDate ? `<span style="font-size:11px;color:var(--brown-muted)">· ${yrsAgo(rep.signDate)} SNO</span>` : ''}
+              ${rep.notes ? `<span style="font-size:11px;color:var(--blue-dk)">· ${rep.notes}</span>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }
+
+      // Multiple FAs — show grouped header + individual FA rows
+      const faRows = fas.map((r, i) => `
+        <div class="rock-item" onclick="openEditSNO(${r.id})" style="padding:5px 8px 5px 20px;border-left:2px solid var(--tan-mid);margin-left:8px;border-bottom:0.5px solid #F0E4D0">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:12.5px;color:var(--brown);font-weight:500">FA ${i+1}</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              ${r.notes ? `<span style="font-size:11px;color:var(--blue-dk)">${r.notes}</span>` : ''}
+              <span style="font-size:11px;color:var(--brown-muted);background:var(--tan-lt);padding:1px 7px;border-radius:4px;cursor:pointer">Edit →</span>
+            </div>
+          </div>
+        </div>`).join('');
+
+      return `<div style="border-bottom:0.5px solid #F0E4D0;padding-bottom:6px;margin-bottom:2px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 8px 4px">
+          <div>
+            <span class="rock-item-title" style="margin-bottom:0;font-size:13.5px">${name}</span>
+            <span class="badge bblue" style="margin-left:6px">${faCount} FAs</span>
+          </div>
+          ${strengthBadge}
+        </div>
+        <div style="font-size:11px;color:var(--brown-muted);padding:0 8px 5px">
+          <span class="badge bst">${rep.state}</span>
+          ${rep.signDate ? `<span style="margin-left:6px">· ${yrsAgo(rep.signDate)} SNO</span>` : ''}
+          <span style="margin-left:6px;font-style:italic">· Click a FA row to edit or move it</span>
+        </div>
+        ${faRows}
+      </div>`;
+    }).join('');
+  });
+}
+
+function openAddSNO() {
+  editingSnoId = null;
+  document.getElementById('sno-modal-title').textContent = 'Add Franchisee';
+  document.getElementById('sno-id').value = '';
+  ['sno-name','sno-state','sno-notes'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('sno-fa').value = 1;
+  document.getElementById('sno-strength').value = '';
+  document.getElementById('sno-category').value = 'Active';
+  document.getElementById('sno-signdate').value = '';
+  document.getElementById('sno-delete-btn').style.display = 'none';
+  document.getElementById('sno-modal').classList.add('open');
+}
+
+function openEditSNO(id) {
+  editingSnoId = id;
+  const r = SNO_DATA.find(x => x.id === id);
+  if (!r) return;
+  // For multi-FA franchisees, always use the strength from their first FA record
+  const allFAs = SNO_DATA.filter(x => x.name === r.name);
+  const primaryStrength = allFAs[0].strength || r.strength;
+  document.getElementById('sno-modal-title').textContent = 'Edit Franchisee';
+  document.getElementById('sno-id').value      = r.id;
+  document.getElementById('sno-name').value     = r.name;
+  document.getElementById('sno-state').value    = r.state;
+  document.getElementById('sno-fa').value       = r.fa;
+  document.getElementById('sno-strength').value = primaryStrength;
+  document.getElementById('sno-category').value = r.category;
+  // Normalize signDate to YYYY-MM-DD for the date input field
+  let signDateVal = '';
+  if (r.signDate) {
+    try {
+      const d = new Date(r.signDate);
+      if (!isNaN(d)) {
+        signDateVal = d.toISOString().slice(0,10);
+      } else {
+        signDateVal = String(r.signDate).slice(0,10);
+      }
+    } catch(e) { signDateVal = String(r.signDate).slice(0,10); }
+  }
+  document.getElementById('sno-signdate').value = signDateVal;
+  document.getElementById('sno-notes').value    = r.notes || '';
+  document.getElementById('sno-delete-btn').style.display = 'inline-block';
+  document.getElementById('sno-modal').classList.add('open');
+}
+
+async function saveSNO() {
+  const name = document.getElementById('sno-name').value.trim();
+  if (!name) { document.getElementById('sno-name').focus(); return; }
+  const data = {
+    name,
+    state:    document.getElementById('sno-state').value.trim().toUpperCase(),
+    fa:       parseInt(document.getElementById('sno-fa').value) || 0,
+    strength: document.getElementById('sno-strength').value,
+    category: document.getElementById('sno-category').value,
+    signDate: document.getElementById('sno-signdate').value,
+    notes:    document.getElementById('sno-notes').value.trim()
+  };
+  if (editingSnoId !== null) {
+    const r = SNO_DATA.find(x => x.id === editingSnoId);
+    if (r) {
+      const oldStrength = r.strength;
+      Object.assign(r, data);
+      await saveSNOToSheet(r, 'update');
+      // If strength changed, sync all FAs for this franchisee
+      if (data.strength !== oldStrength) {
+        const siblings = SNO_DATA.filter(x => x.name === r.name && x.id !== r.id);
+        for (const s of siblings) {
+          s.strength = data.strength;
+          saveSNOToSheet(s, 'update'); // fire and forget
+        }
+      }
+    }
+  } else {
+    const newR = { id: snoIdCounter++, ...data };
+    SNO_DATA.push(newR);
+    await saveSNOToSheet(newR, 'add');
+  }
+  closeModalSNO();
+  renderSNO();
+}
+
+async function deleteSNO() {
+  if (editingSnoId === null) return;
+  if (!ROCKS_API_URL) {
+    SNO_DATA = SNO_DATA.filter(x => x.id !== editingSnoId);
+  } else {
+    await saveSNOToSheet({ id: editingSnoId }, 'delete');
+    SNO_DATA = SNO_DATA.filter(x => x.id !== editingSnoId);
+  }
+  closeModalSNO();
+  renderSNO();
+}
+
+function closeModalSNO() {
+  document.getElementById('sno-modal').classList.remove('open');
+  editingSnoId = null;
+}
+
+(document.getElementById('sno-modal')||{addEventListener:()=>{}}).addEventListener('click', function(e) {
+  if (e.target === this) closeModalSNO();
+});
+
+// ── RESALE ──
+let RESALE_STORES = [];
+let resaleIdCounter = 200;
+let editingStoreId = null;
+
+// Pre-load from the existing Resale sheet data
+const RESALE_DEFAULTS = [
+  {id:201,location:'Westminster 8525 W. 100th Ave',state:'CO',franchisee:'Lord, Natalie',store:'12',category:'Can Sell'},
+  {id:202,location:'Augusta 262 Furys Ferry Rd',state:'GA',franchisee:'Triplett, Ryan',store:'130',category:'Can Sell'},
+  {id:203,location:'Burlington 310 S Lincoln St',state:'CO',franchisee:'Crumley, Lane',store:'147',category:'Can Sell'},
+  {id:204,location:'Elizabeth 2360 Legacy Cir',state:'CO',franchisee:'Mote, Jessica',store:'60',category:'Can Sell'},
+  {id:205,location:'Thornton 2671 E. 120th Ave.',state:'CO',franchisee:'Mangalapallil.Peri',store:'47',category:'Can Sell'},
+  {id:206,location:'Colorado Springs 7636 Dublin Blvd',state:'CO',franchisee:'Bland.Murray',store:'32',category:'Can Sell'},
+  {id:207,location:'Colorado Springs 460 Chapel Hills Dr',state:'CO',franchisee:'Bland.Murray',store:'30',category:'Can Sell'},
+  {id:208,location:'Chandler 4044 S. Arizona Ave',state:'AZ',franchisee:'Riches, Nik',store:'40',category:'Can Sell'},
+  {id:209,location:'Thornton 7315 E. 128th Ave',state:'CO',franchisee:'Farnsworth.Finley',store:'86',category:'Can Sell'},
+  {id:210,location:'Commerce City 15196 E 120th Ave',state:'CO',franchisee:'Farnsworth.Finley',store:'56',category:'Can Sell'},
+  {id:211,location:'Commerce City 15259 E 103rd Pl',state:'CO',franchisee:'Farnsworth.Finley',store:'58',category:'Can Sell'},
+  {id:212,location:'Greeley 2530 11th Ave',state:'CO',franchisee:'Bland.Thwaites',store:'182',category:'Can Sell'},
+  {id:213,location:'Anthem 42404 N Vision Way',state:'AZ',franchisee:'Clark-Stoner.Adams',store:'71',category:'Can Sell'},
+  {id:214,location:'Loveland 2004 W. Eisenhower Blvd',state:'CO',franchisee:'Bland, Greg',store:'86',category:'Can Sell'},
+  {id:215,location:'Clayton 1299 Mechanical Dr.',state:'NC',franchisee:'Kemp, John',store:'85',category:'Can Sell'}
+];
+
+async function loadResale() {
+  if (!ROCKS_API_URL) { RESALE_STORES = [...RESALE_DEFAULTS]; renderResale(); return; }
+  try {
+    const res  = await fetch(ROCKS_API_URL + '?type=resale');
+    const data = await res.json();
+    if (data.success && data.stores && data.stores.length > 0) {
+      RESALE_STORES = data.stores.map(s => ({
+        id:          parseInt(s.ID) || resaleIdCounter++,
+        location:    s.Location    || '',
+        state:       s.State       || '',
+        franchisee:  s.Franchisee  || '',
+        store:       s.Store       || '',
+        category:    s.Category    || 'Can Sell'
+      }));
+      resaleIdCounter = Math.max(...RESALE_STORES.map(s=>s.id), 200) + 1;
+    } else {
+      // First run — seed with defaults and save
+      RESALE_STORES = [...RESALE_DEFAULTS];
+      await Promise.all(RESALE_STORES.map(s => saveStoreToSheet(s, 'add')));
+    }
+  } catch(e) {
+    console.warn('Could not load resale:', e);
+    RESALE_STORES = [...RESALE_DEFAULTS];
+  }
+  renderResale();
+}
+
+async function saveStoreToSheet(store, action) {
+  if (!ROCKS_API_URL) return;
+  try {
+    await fetch(ROCKS_API_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type:'resale', action,
+        id: store.id, location: store.location, state: store.state,
+        franchisee: store.franchisee, store: store.store, category: store.category
+      })
+    });
+  } catch(e) { console.warn('Save resale error:', e); }
+}
+
+async function deleteStoreFromSheet(id) {
+  if (!ROCKS_API_URL) return;
+  try {
+    await fetch(ROCKS_API_URL, { method:'POST', body: JSON.stringify({type:'resale',action:'delete',id}) });
+  } catch(e) { console.warn('Delete resale error:', e); }
+}
+
+function renderResale() {
+  const canSell     = RESALE_STORES.filter(s => s.category === 'Can Sell');
+  const shouldClose = RESALE_STORES.filter(s => s.category === 'Should Close');
+  const states      = [...new Set(RESALE_STORES.map(s => s.state).filter(Boolean))];
+
+  const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  setEl('resale-can-sell-count',    canSell.length);
+  setEl('resale-should-close-count',shouldClose.length);
+  setEl('resale-states-count',      states.length);
+  setEl('resale-states-sub',        states.length ? states.slice(0,4).join(', ')+(states.length>4?'…':'') : ' ');
+
+  const renderList = (stores, listId, emptyId) => {
+    const listEl  = document.getElementById(listId);
+    const emptyEl = document.getElementById(emptyId);
+    if (!listEl) return;
+    if (stores.length === 0) {
+      listEl.innerHTML = '';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    listEl.innerHTML = stores.map(s => `
+      <div class="rock-item" onclick="openEditStore(${s.id})">
+        <div class="rock-item-body">
+          <div class="rock-item-title">${s.location}</div>
+          <div class="rock-item-meta">
+            ${s.franchisee ? `<span class="rock-item-owner">👤 ${s.franchisee}</span>` : ''}
+            <span class="badge bst">${s.state}</span>
+            ${s.store ? `<span style="font-size:11px;color:var(--brown-muted)">Store #${s.store}</span>` : ''}
+          </div>
+        </div>
+      </div>`).join('');
+  };
+
+  renderList(canSell,     'resale-list-can-sell',     'resale-empty-can-sell');
+  renderList(shouldClose, 'resale-list-should-close', 'resale-empty-should-close');
+}
+
+function openAddStore() {
+  editingStoreId = null;
+  document.getElementById('resale-modal-title').textContent = 'Add Store';
+  document.getElementById('rs-id').value = '';
+  document.getElementById('rs-location').value = '';
+  document.getElementById('rs-franchisee').value = '';
+  document.getElementById('rs-state').value = '';
+  document.getElementById('rs-store').value = '';
+  document.getElementById('rs-category').value = 'Can Sell';
+  document.getElementById('rs-delete-btn').style.display = 'none';
+  document.getElementById('resale-modal').classList.add('open');
+}
+
+function openEditStore(id) {
+  editingStoreId = id;
+  const s = RESALE_STORES.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('resale-modal-title').textContent = 'Edit Store';
+  document.getElementById('rs-id').value = s.id;
+  document.getElementById('rs-location').value = s.location;
+  document.getElementById('rs-franchisee').value = s.franchisee;
+  document.getElementById('rs-state').value = s.state;
+  document.getElementById('rs-store').value = s.store;
+  document.getElementById('rs-category').value = s.category;
+  document.getElementById('rs-delete-btn').style.display = 'inline-block';
+  document.getElementById('resale-modal').classList.add('open');
+}
+
+async function saveStore() {
+  const location = document.getElementById('rs-location').value.trim();
+  if (!location) { document.getElementById('rs-location').focus(); return; }
+  const data = {
+    location,
+    franchisee: document.getElementById('rs-franchisee').value.trim(),
+    state:      document.getElementById('rs-state').value.trim().toUpperCase(),
+    store:      document.getElementById('rs-store').value.trim(),
+    category:   document.getElementById('rs-category').value
+  };
+  if (editingStoreId !== null) {
+    const s = RESALE_STORES.find(x => x.id === editingStoreId);
+    if (s) { Object.assign(s, data); await saveStoreToSheet(s, 'update'); }
+  } else {
+    const newStore = { id: resaleIdCounter++, ...data };
+    RESALE_STORES.push(newStore);
+    await saveStoreToSheet(newStore, 'add');
+  }
+  closeResaleModal();
+  renderResale();
+}
+
+async function deleteStore() {
+  if (editingStoreId === null) return;
+  await deleteStoreFromSheet(editingStoreId);
+  RESALE_STORES = RESALE_STORES.filter(x => x.id !== editingStoreId);
+  closeResaleModal();
+  renderResale();
+}
+
+function closeResaleModal() {
+  document.getElementById('resale-modal').classList.remove('open');
+  editingStoreId = null;
+}
+
+(document.getElementById('resale-modal')||{addEventListener:()=>{}}).addEventListener('click', function(e) {
+  if (e.target === this) closeResaleModal();
+});
+
+// ── OPEN STORES ──
+let OS_STORES = [];
+let osIdCounter = 300;
+let editingOsId = null;
+
+const OS_DEFAULTS = [
+  // ── Under Construction (6) ──
+  {id:301,franchisee:'Larsen, Erik',           location:'Manitowoc 1022 Washington St',          state:'WI',layout:'Café/DT Stand-alone',       category:'Under Construction',openDate:'2026-07-14',notes:''},
+  {id:302,franchisee:'Wiley, Michelle',         location:'Littleton 10253 W Chatfield Ave',       state:'CO',layout:'Café/DT Stand-alone mini',   category:'Under Construction',openDate:'2026-06-16',notes:''},
+  {id:303,franchisee:'Edman',                   location:'Redwood Falls 321 E Bridge St',         state:'MN',layout:'DT Stand-alone',             category:'Under Construction',openDate:'2026-06-16',notes:''},
+  {id:304,franchisee:'Yandow (Barrett)',         location:'Saco 3 Waterfall Drive',               state:'MN',layout:'DT Stand-alone',             category:'Under Construction',openDate:'2026-05-19',notes:''},
+  {id:305,franchisee:'Barnes, Laura',           location:'Huntington 201 S Jefferson St',         state:'IN',layout:'DT Stand-alone',             category:'Under Construction',openDate:'2026-06-02',notes:'Xsite'},
+  {id:306,franchisee:'Altimus, Doug',           location:'Salisbury',                             state:'MD',layout:'DT Stand-alone',             category:'Under Construction',openDate:'2026-09-08',notes:''},
+  // ── Planning (29) ──
+  {id:307,franchisee:'Burrows',                 location:"O'Fallon 203 Scott Troy Rd",            state:'IL',layout:'DT Endcap',                  category:'Planning',openDate:'',notes:'Priority F'},
+  {id:308,franchisee:'Gordon',                  location:'Holland 12810 Riley St',                state:'MI',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority C'},
+  {id:309,franchisee:'Morici.Kreuger',          location:'Maize 4575 N Maize Rd',                state:'KS',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority F'},
+  {id:310,franchisee:'Burbar',                  location:'Davison 8024 Davison Rd',              state:'MI',layout:'Café/DT Endcap',              category:'Planning',openDate:'',notes:'Priority B'},
+  {id:311,franchisee:'Ferrey.Rauch',            location:'Fort Collins 207 Co Rd 9E',            state:'CO',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority F'},
+  {id:312,franchisee:'Wilcox',                  location:'Murrieta 39412 Los Alamos Rd',         state:'CA',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority F'},
+  {id:313,franchisee:'Adams, T',                location:'Littleton 11592 W Hialeah Pl',         state:'CO',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority A · Xsite'},
+  {id:314,franchisee:'Bottomley',               location:'Abilene 701 S Judge Ely Blvd',         state:'TX',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority A'},
+  {id:315,franchisee:'Kumar',                   location:'Vancouver 11914 NE 72nd Ave',           state:'WA',layout:'Café/DT Stand-alone',        category:'Planning',openDate:'',notes:'Priority C'},
+  {id:316,franchisee:'Stevenson',               location:'Yukon 12404 N Mustang Rd',             state:'OK',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority C'},
+  {id:317,franchisee:'Anderson, Stephen',       location:'Johnstown CO-60 & Colorado Blvd',      state:'CO',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority C'},
+  {id:318,franchisee:'Lane',                    location:'Canyon 5380 4th Ave',                  state:'TX',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority A'},
+  {id:319,franchisee:'Panjwani.Attawala',       location:'Suwanee 7804 McGinnis Ferry',          state:'GA',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority A'},
+  {id:320,franchisee:'Roberts',                 location:'Pittsfield 5875 W Michigan Ave',       state:'MI',layout:'Mini-Café/DT Stand-alone',   category:'Planning',openDate:'',notes:'Priority A · Xsite'},
+  {id:321,franchisee:'Lane',                    location:'Amarillo 928 Westwood Dr',             state:'TX',layout:'Café/DT Stand-alone',        category:'Planning',openDate:'',notes:'Priority A'},
+  {id:322,franchisee:'Patel',                   location:'Warner Robins 237 Sedgebrooke Dr',     state:'GA',layout:'Café/DT Endcap',             category:'Planning',openDate:'',notes:'Priority A'},
+  {id:323,franchisee:'Gautreau',                location:'Robert 45039 LA-445',                  state:'LA',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority A'},
+  {id:324,franchisee:'Panjwani.Attawala',       location:'LaGrange GA',                          state:'GA',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority A'},
+  {id:325,franchisee:'Panjwani.Attawala',       location:'Roswell 2350 Holcomb Bridge Rd',       state:'GA',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority A'},
+  {id:326,franchisee:'Garrison',                location:'Wesley Chapel 3114 Hueland Pond',      state:'FL',layout:'Café/DT Stand-alone',        category:'Planning',openDate:'',notes:'Priority A'},
+  {id:327,franchisee:'Ako.Everts',              location:'Duncanville 102 E Danieldale Rd',      state:'TX',layout:'Café/DT Stand-alone',        category:'Planning',openDate:'',notes:'Priority A'},
+  {id:328,franchisee:'Schmidt.Koris.Harris',    location:'Gretna 8503 S 180th St',              state:'NE',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority A'},
+  {id:329,franchisee:'Patel, C.D.',             location:'Oswego 3200 Orchard Rd',              state:'IL',layout:'Café/DT Endcap',             category:'Planning',openDate:'',notes:'Priority A'},
+  {id:330,franchisee:'Knudsen',                 location:'Longmont 2494 Pace St',               state:'CO',layout:'Café/DT Stand-alone',        category:'Planning',openDate:'',notes:'Priority A'},
+  {id:331,franchisee:'Knudsen',                 location:'Longmont 1023 CO-119',                state:'CO',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority A'},
+  {id:332,franchisee:'Patel, C.D.',             location:'St John 8615 85th Ave (NEC)',          state:'IN',layout:'DT Endcap',                  category:'Planning',openDate:'',notes:'Priority A'},
+  {id:333,franchisee:'Panjwani.Attawala',       location:'Alpharetta 5605 Atlanta Hwy',          state:'GA',layout:'DT Endcap',                  category:'Planning',openDate:'',notes:'Priority A'},
+  {id:334,franchisee:'Panjwani.Attawala',       location:'Gainesville 2165 Browns Bridge Rd',   state:'GA',layout:'DT Endcap',                  category:'Planning',openDate:'',notes:'Priority A'},
+  {id:335,franchisee:'Elkahwaji.Van Werden',    location:'Omaha 19333 Gold St',                 state:'NE',layout:'DT Stand-alone',             category:'Planning',openDate:'',notes:'Priority A'}
+];
+
+
+async function loadOpenStores() {
+  if (!ROCKS_API_URL) { OS_STORES = [...OS_DEFAULTS]; renderOpenStores(); return; }
+  try {
+    const res  = await fetch(ROCKS_API_URL + '?type=stores');
+    const data = await res.json();
+    if (data.success && data.stores && data.stores.length > 0) {
+      OS_STORES = data.stores.map(s => ({
+        id:         parseInt(s.ID) || osIdCounter++,
+        franchisee: s.Franchisee || '',
+        location:   s.Location   || '',
+        state:      s.State      || '',
+        layout:     s.Layout     || '',
+        category:   s.Category   || 'Under Construction',
+        openDate:   s['Open Date'] || '',
+        notes:      s.Notes      || ''
+      }));
+      osIdCounter = Math.max(...OS_STORES.map(s=>s.id), 300) + 1;
+    } else {
+      OS_STORES = [...OS_DEFAULTS];
+      await Promise.all(OS_STORES.map(s => saveStore_OS_sheet(s, 'add')));
+    }
+  } catch(e) {
+    console.warn('Could not load open stores:', e);
+    OS_STORES = [...OS_DEFAULTS];
+  }
+  renderOpenStores();
+}
+
+async function saveStore_OS_sheet(store, action) {
+  if (!ROCKS_API_URL) return;
+  try {
+    await fetch(ROCKS_API_URL, {
+      method:'POST',
+      body: JSON.stringify({
+        type:'stores', action,
+        id: store.id, franchisee: store.franchisee, location: store.location,
+        state: store.state, layout: store.layout, category: store.category,
+        openDate: store.openDate, notes: store.notes
+      })
+    });
+  } catch(e) { console.warn('Save store error:', e); }
+}
+
+async function deleteStore_OS_sheet(id) {
+  if (!ROCKS_API_URL) return;
+  try {
+    await fetch(ROCKS_API_URL, { method:'POST', body: JSON.stringify({type:'stores',action:'delete',id}) });
+  } catch(e) { console.warn('Delete store error:', e); }
+}
+
+function renderOpenStores() {
+  const construction = OS_STORES.filter(s => s.category === 'Under Construction');
+  const planning     = OS_STORES.filter(s => s.category === 'Planning');
+  const states       = [...new Set(OS_STORES.map(s => s.state).filter(Boolean))];
+
+  const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  setEl('os-construction-count', construction.length);
+  setEl('os-planning-count',     planning.length);
+  setEl('os-states-count',       states.length);
+
+  const renderList = (stores, listId, emptyId) => {
+    const listEl  = document.getElementById(listId);
+    const emptyEl = document.getElementById(emptyId);
+    if (!listEl) return;
+    if (stores.length === 0) {
+      listEl.innerHTML = '';
+      if (emptyEl) emptyEl.style.display = 'block';
+      return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+    listEl.innerHTML = stores.map(s => {
+      const dueStr = s.openDate ? new Date(s.openDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+      return `<div class="rock-item" onclick="openEditStore_OS(${s.id})">
+        <div class="rock-item-body">
+          <div class="rock-item-title">${s.location}</div>
+          <div class="rock-item-meta">
+            ${s.franchisee ? `<span class="rock-item-owner">👤 ${s.franchisee}</span>` : ''}
+            <span class="badge bst">${s.state}</span>
+            ${dueStr ? `<span style="font-size:11px;color:var(--brown-muted)">📅 ${dueStr}</span>` : ''}
+          </div>
+          ${s.layout ? `<div style="font-size:11.5px;color:var(--brown-muted);margin-top:3px">${s.layout}${s.notes?' · '+s.notes:''}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  };
+
+  renderList(construction, 'os-list-construction', 'os-empty-construction');
+  renderList(planning,     'os-list-planning',     'os-empty-planning');
+  // Update badge to show pipeline total
+  const badge = document.getElementById('open-stores-badge');
+  if (badge) badge.textContent = OS_STORES.length + ' in pipeline';
+}
+
+function openAddStore_OS() {
+  editingOsId = null;
+  document.getElementById('os-modal-title').textContent = 'Add Store';
+  document.getElementById('os-id').value = '';
+  document.getElementById('os-franchisee').value = '';
+  document.getElementById('os-state').value = '';
+  document.getElementById('os-location').value = '';
+  document.getElementById('os-layout').value = '';
+  document.getElementById('os-category').value = 'Under Construction';
+  document.getElementById('os-opendate').value = '';
+  document.getElementById('os-notes').value = '';
+  document.getElementById('os-delete-btn').style.display = 'none';
+  document.getElementById('os-modal').classList.add('open');
+}
+
+function openEditStore_OS(id) {
+  editingOsId = id;
+  const s = OS_STORES.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('os-modal-title').textContent = 'Edit Store';
+  document.getElementById('os-id').value = s.id;
+  document.getElementById('os-franchisee').value = s.franchisee;
+  document.getElementById('os-state').value = s.state;
+  document.getElementById('os-location').value = s.location;
+  document.getElementById('os-layout').value = s.layout;
+  document.getElementById('os-category').value = s.category;
+  document.getElementById('os-opendate').value = s.openDate || '';
+  document.getElementById('os-notes').value = s.notes || '';
+  document.getElementById('os-delete-btn').style.display = 'inline-block';
+  document.getElementById('os-modal').classList.add('open');
+}
+
+async function saveStore_OS() {
+  const location = document.getElementById('os-location').value.trim();
+  if (!location) { document.getElementById('os-location').focus(); return; }
+  const data = {
+    franchisee: document.getElementById('os-franchisee').value.trim(),
+    state:      document.getElementById('os-state').value.trim().toUpperCase(),
+    location,
+    layout:     document.getElementById('os-layout').value.trim(),
+    category:   document.getElementById('os-category').value,
+    openDate:   document.getElementById('os-opendate').value,
+    notes:      document.getElementById('os-notes').value.trim()
+  };
+  if (editingOsId !== null) {
+    const s = OS_STORES.find(x => x.id === editingOsId);
+    if (s) { Object.assign(s, data); await saveStore_OS_sheet(s, 'update'); }
+  } else {
+    const newStore = { id: osIdCounter++, ...data };
+    OS_STORES.push(newStore);
+    await saveStore_OS_sheet(newStore, 'add');
+  }
+  closeModal_OS();
+  renderOpenStores();
+}
+
+async function deleteStore_OS() {
+  if (editingOsId === null) return;
+  await deleteStore_OS_sheet(editingOsId);
+  OS_STORES = OS_STORES.filter(x => x.id !== editingOsId);
+  closeModal_OS();
+  renderOpenStores();
+}
+
+function closeModal_OS() {
+  document.getElementById('os-modal').classList.remove('open');
+  editingOsId = null;
+}
+
+(document.getElementById('os-modal')||{addEventListener:()=>{}}).addEventListener('click', function(e) {
+  if (e.target === this) closeModal_OS();
+});
+
+// ── REAL ESTATE COMMITTEE ──
+let COMMITTEE = [];
+let memberIdCounter = 100;
+let editingMemberId = null;
+
+const DEFAULT_MEMBERS = [
+  { id:1, initials:'VP', role:'Chair',      title:'VP of Real Estate',        name:'TBD' },
+  { id:2, initials:'DO', role:'Member',     title:'Director of Operations',   name:'TBD' },
+  { id:3, initials:'FS', role:'Member',     title:'Franchise Sales Lead',     name:'TBD' },
+  { id:4, initials:'GC', role:'Legal',      title:'General Counsel / Legal',  name:'TBD' },
+  { id:5, initials:'CF', role:'Finance',    title:'CFO / Finance Rep',        name:'TBD' },
+  { id:6, initials:'FR', role:'Advisory',   title:'Franchisee Representative',name:'Elect from active group' }
+];
+
+async function loadCommittee() {
+  if (!ROCKS_API_URL) { COMMITTEE = [...DEFAULT_MEMBERS]; renderCommittee(); return; }
+  try {
+    const res = await fetch(ROCKS_API_URL + '?type=committee');
+    const data = await res.json();
+    if (data.success && data.members && data.members.length > 0) {
+      COMMITTEE = data.members.map(m => ({
+        id:       parseInt(m.ID) || memberIdCounter++,
+        initials: m.Initials || '',
+        role:     m.Role || 'Member',
+        title:    m.Title || '',
+        name:     m.Name || 'TBD'
+      }));
+      memberIdCounter = Math.max(...COMMITTEE.map(m => m.id), 99) + 1;
+    } else {
+      // First time — load defaults and save them
+      COMMITTEE = [...DEFAULT_MEMBERS];
+      await Promise.all(COMMITTEE.map(m => saveMemberToSheet(m, 'add')));
+    }
+  } catch(e) {
+    COMMITTEE = [...DEFAULT_MEMBERS];
+    console.warn('Could not load committee:', e);
+  }
+  renderCommittee();
+}
+
+async function saveMemberToSheet(member, action) {
+  if (!ROCKS_API_URL) return;
+  try {
+    await fetch(ROCKS_API_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'committee', action,
+        id:       member.id,
+        initials: member.initials,
+        role:     member.role,
+        title:    member.title,
+        name:     member.name
+      })
+    });
+  } catch(e) { console.warn('Could not save member:', e); }
+}
+
+async function deleteMemberFromSheet(id) {
+  if (!ROCKS_API_URL) return;
+  try {
+    await fetch(ROCKS_API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ type: 'committee', action: 'delete', id })
+    });
+  } catch(e) { console.warn('Could not delete member:', e); }
+}
+
+function renderCommittee() {
+  const grid = document.getElementById('committee-grid');
+  if (!grid) return;
+
+  if (COMMITTEE.length === 0) {
+    grid.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--brown-muted);grid-column:span 3;font-size:13px">No committee members yet — click <strong>+ Add Seat</strong> to get started.</div>';
+    return;
+  }
+
+  grid.innerHTML = COMMITTEE.map(m => {
+    const isTBD = !m.name || m.name === 'TBD' || m.name === 'Elect from active group';
+    return `<div class="committee-card filled" onclick="openEditMember(${m.id})" style="cursor:pointer">
+      <div class="cc-icon">${m.initials || '?'}</div>
+      <div class="cc-role">${m.role}</div>
+      <div class="cc-name">${m.title}</div>
+      <div class="cc-add" style="font-size:${isTBD?'11':'12'}px;color:${isTBD?'var(--red)':'var(--green)'}">
+        ${isTBD ? (m.name || 'Name TBD') : '✓ ' + m.name}
+      </div>
+      <div style="font-size:10px;color:var(--brown-muted);margin-top:4px;opacity:.6">click to edit</div>
+    </div>`;
+  }).join('');
+}
+
+function openAddMember() {
+  editingMemberId = null;
+  document.getElementById('committee-modal-title').textContent = 'Add Committee Seat';
+  document.getElementById('cm-id').value = '';
+  document.getElementById('cm-name').value = '';
+  document.getElementById('cm-initials').value = '';
+  document.getElementById('cm-role').value = 'Member';
+  document.getElementById('cm-title').value = '';
+  document.getElementById('cm-delete-btn').style.display = 'none';
+  document.getElementById('committee-modal').classList.add('open');
+}
+
+function openEditMember(id) {
+  editingMemberId = id;
+  const m = COMMITTEE.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('committee-modal-title').textContent = 'Edit Committee Seat';
+  document.getElementById('cm-id').value = m.id;
+  document.getElementById('cm-name').value = m.name === 'TBD' ? '' : (m.name || '');
+  document.getElementById('cm-initials').value = m.initials || '';
+  document.getElementById('cm-role').value = m.role || 'Member';
+  document.getElementById('cm-title').value = m.title || '';
+  document.getElementById('cm-delete-btn').style.display = 'inline-block';
+  document.getElementById('committee-modal').classList.add('open');
+}
+
+async function saveMember() {
+  const name     = document.getElementById('cm-name').value.trim();
+  const initials = document.getElementById('cm-initials').value.trim().toUpperCase();
+  const role     = document.getElementById('cm-role').value;
+  const title    = document.getElementById('cm-title').value.trim();
+  if (!title) { document.getElementById('cm-title').focus(); return; }
+
+  const data = {
+    initials: initials || (name ? name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() : '?'),
+    role, title,
+    name: name || 'TBD'
+  };
+
+  if (editingMemberId !== null) {
+    const m = COMMITTEE.find(x => x.id === editingMemberId);
+    if (m) { Object.assign(m, data); await saveMemberToSheet(m, 'update'); }
+  } else {
+    const newMember = { id: memberIdCounter++, ...data };
+    COMMITTEE.push(newMember);
+    await saveMemberToSheet(newMember, 'add');
+  }
+  closeCommitteeModal();
+  renderCommittee();
+}
+
+async function deleteMember() {
+  if (editingMemberId === null) return;
+  await deleteMemberFromSheet(editingMemberId);
+  COMMITTEE = COMMITTEE.filter(x => x.id !== editingMemberId);
+  closeCommitteeModal();
+  renderCommittee();
+}
+
+function closeCommitteeModal() {
+  document.getElementById('committee-modal').classList.remove('open');
+  editingMemberId = null;
+}
+
+(document.getElementById('committee-modal')||{addEventListener:()=>{}}).addEventListener('click', function(e) {
+  if (e.target === this) closeCommitteeModal();
+});
+
+window.addEventListener('DOMContentLoaded', function() {
+  try {
+    showTab('sno');
+    loadSettings();
+    checkRocksSetup();
+    loadRocks();
+    loadCommittee();
+    loadResale();
+    loadOpenStores();
+    loadSNO();
+    loadContracts();
+    loadAllData();
+  } catch(e) {
+    console.error('Startup error:', e);
+    document.body.insertAdjacentHTML('afterbegin',
+      '<div style="position:fixed;top:0;left:0;right:0;background:#C05530;color:white;padding:10px;z-index:9999;font-family:monospace;font-size:13px">Startup error: '+e.message+'</div>'
+    );
+  }
+});
+
+</script>
+
+</body>
+</html>
