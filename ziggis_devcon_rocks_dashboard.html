@@ -278,7 +278,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <span class="tab-dot td-sno"></span>SNO
     </button>
     <button id="tab-open" class="tab-btn" onclick="showTab('open')">
-      <span class="tab-dot td-open"></span>Open Stores
+      <span class="tab-dot td-open"></span>Development
     </button>
     <button id="tab-resale" class="tab-btn" onclick="showTab('resale')">
       <span class="tab-dot td-resale"></span>Resale
@@ -395,7 +395,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   <div class="section-header">
     <div class="section-icon si-open">🏗</div>
     <div class="section-title-group">
-      <div class="section-title">Open Stores <span class="open-count-badge" id="open-stores-badge">109 open</span></div>
+      <div class="section-title">Development <span class="open-count-badge" id="open-stores-badge">109 open</span></div>
     </div>
     <button onclick="openAddStore_OS()" style="margin-left:auto;padding:8px 18px;background:var(--brown);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Add Store</button>
   </div>
@@ -562,6 +562,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
           <option value="Should Close">Should Close</option>
         </select>
       </div>
+      <div class="form-group">
+        <label class="form-label">Purchase Price <span style="opacity:.5;font-weight:400">($)</span></label>
+        <input class="form-input" id="rs-price" placeholder="e.g. 250,000" oninput="formatNumberInput(this)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">YTD Daily Avg Sales <span style="opacity:.5;font-weight:400">($)</span></label>
+        <input class="form-input" id="rs-daily-avg" placeholder="e.g. 1,850" oninput="formatNumberInput(this)">
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn-delete" id="rs-delete-btn" onclick="deleteStore()" style="display:none">Remove</button>
@@ -643,19 +651,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <div class="rock-list-empty" id="rock-empty-sno">No rocks yet — add a 90-day priority for SNO</div>
     </div>
 
-    <!-- Open Stores -->
+    <!-- Development -->
     <div class="rock-category-card" id="cat-open">
       <div class="rock-cat-header" style="border-left:4px solid #4E9260">
         <div class="rock-cat-icon" style="background:var(--green-lt);color:var(--green)">🏗</div>
         <div>
-          <div class="rock-cat-title">Open Stores</div>
+          <div class="rock-cat-title">Development</div>
           <div class="rock-cat-sub">Construction &amp; Planning</div>
         </div>
-        <button class="rock-add-btn" onclick="openAddRock('Open Stores')">+ Add Rock</button>
+        <button class="rock-add-btn" onclick="openAddRock('Development')">+ Add Rock</button>
       </div>
       <div class="rock-cat-progress" id="cat-open-progress"></div>
       <div class="rock-list" id="rock-list-open"></div>
-      <div class="rock-list-empty" id="rock-empty-open">No rocks yet — add a 90-day priority for Open Stores</div>
+      <div class="rock-list-empty" id="rock-empty-open">No rocks yet — add a 90-day priority for Development</div>
     </div>
 
     <!-- Resale -->
@@ -744,7 +752,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <label class="form-label">Category</label>
         <select class="form-select" id="edit-rock-cat">
           <option value="SNO">SNO</option>
-          <option value="Open Stores">Open Stores</option>
+          <option value="Development">Development</option>
           <option value="Resale">Resale</option>
           <option value="Real Estate Committee">Real Estate Committee</option>
         </select>
@@ -874,11 +882,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <button class="btn-cancel" onclick="closeModalSNO()">Cancel</button>
       <button class="btn-save" onclick="saveSNO()">Save</button>
     </div>
-  </div>
-</div>
-
-</main>
-
 <script>
 
 function showTab(id){
@@ -1377,6 +1380,11 @@ function openBudgetEdit() {
   }
 }
 
+function formatNumberInput(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (raw) el.value = parseInt(raw).toLocaleString('en-US');
+}
+
 // ── ROCKS ──
 // Apps Script URL — set this after deploying the Apps Script
 let ROCKS_API_URL = localStorage.getItem('ziggis_rocks_api_url') || 'https://script.google.com/macros/s/AKfycbxp_b1gnw6mJKkLwjDz082rv21qYKFjZFxTNWgrH4oIpYdCozdCc6MxfeGyXtJrn0iM5Q/exec';
@@ -1387,7 +1395,7 @@ let editingId = null;
 
 const CAT_MAP = {
   'SNO':                   { listId:'rock-list-sno',    emptyId:'rock-empty-sno',    progId:'cat-sno-progress',    color:'#72B1CB' },
-  'Open Stores':           { listId:'rock-list-open',   emptyId:'rock-empty-open',   progId:'cat-open-progress',   color:'#4E9260' },
+  'Development':           { listId:'rock-list-open',   emptyId:'rock-empty-open',   progId:'cat-open-progress',   color:'#4E9260' },
   'Resale':                { listId:'rock-list-resale', emptyId:'rock-empty-resale', progId:'cat-resale-progress', color:'#CFA571' },
   'Real Estate Committee': { listId:'rock-list-rec',    emptyId:'rock-empty-rec',    progId:'cat-rec-progress',    color:'#C05530' }
 };
@@ -2129,7 +2137,9 @@ async function loadResale() {
         state:       s.State       || '',
         franchisee:  s.Franchisee  || '',
         store:       s.Store       || '',
-        category:    s.Category    || 'Can Sell'
+        category:    s.Category    || 'Can Sell',
+        price:       s.Price       || '',
+        dailyAvg:    s['Daily Avg']|| ''
       }));
       resaleIdCounter = Math.max(...RESALE_STORES.map(s=>s.id), 200) + 1;
     } else {
@@ -2152,7 +2162,8 @@ async function saveStoreToSheet(store, action) {
       body: JSON.stringify({
         type:'resale', action,
         id: store.id, location: store.location, state: store.state,
-        franchisee: store.franchisee, store: store.store, category: store.category
+        franchisee: store.franchisee, store: store.store, category: store.category,
+        price: store.price||'', dailyAvg: store.dailyAvg||''
       })
     });
   } catch(e) { console.warn('Save resale error:', e); }
@@ -2195,6 +2206,10 @@ function renderResale() {
             <span class="badge bst">${s.state}</span>
             ${s.store ? `<span style="font-size:11px;color:var(--brown-muted)">Store #${s.store}</span>` : ''}
           </div>
+          ${(s.price || s.dailyAvg) ? `<div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap">
+            ${s.price ? `<span style="background:#EAF3DE;color:#3B6D11;font-size:12px;font-weight:700;padding:2px 9px;border-radius:6px">💰 Ask: $${parseInt(s.price.toString().replace(/,/g,'')).toLocaleString()}</span>` : ''}
+            ${s.dailyAvg ? `<span style="background:#E3F2F8;color:#3A7B9A;font-size:12px;font-weight:700;padding:2px 9px;border-radius:6px">📊 $${parseInt(s.dailyAvg.toString().replace(/,/g,'')).toLocaleString()}/day avg</span>` : ''}
+          </div>` : ''}
         </div>
       </div>`).join('');
   };
@@ -2212,6 +2227,8 @@ function openAddStore() {
   document.getElementById('rs-state').value = '';
   document.getElementById('rs-store').value = '';
   document.getElementById('rs-category').value = 'Can Sell';
+  document.getElementById('rs-price').value = '';
+  document.getElementById('rs-daily-avg').value = '';
   document.getElementById('rs-delete-btn').style.display = 'none';
   document.getElementById('resale-modal').classList.add('open');
 }
@@ -2227,6 +2244,9 @@ function openEditStore(id) {
   document.getElementById('rs-state').value = s.state;
   document.getElementById('rs-store').value = s.store;
   document.getElementById('rs-category').value = s.category;
+  // Format numbers with commas for display
+  document.getElementById('rs-price').value = s.price ? parseInt(s.price).toLocaleString('en-US') : '';
+  document.getElementById('rs-daily-avg').value = s.dailyAvg ? parseInt(s.dailyAvg).toLocaleString('en-US') : '';
   document.getElementById('rs-delete-btn').style.display = 'inline-block';
   document.getElementById('resale-modal').classList.add('open');
 }
@@ -2239,7 +2259,9 @@ async function saveStore() {
     franchisee: document.getElementById('rs-franchisee').value.trim(),
     state:      document.getElementById('rs-state').value.trim().toUpperCase(),
     store:      document.getElementById('rs-store').value.trim(),
-    category:   document.getElementById('rs-category').value
+    category:   document.getElementById('rs-category').value,
+    price:      document.getElementById('rs-price').value.replace(/,/g,'').trim(),
+    dailyAvg:   document.getElementById('rs-daily-avg').value.replace(/,/g,'').trim()
   };
   if (editingStoreId !== null) {
     const s = RESALE_STORES.find(x => x.id === editingStoreId);
@@ -2660,6 +2682,7 @@ window.addEventListener('DOMContentLoaded', function() {
     );
   }
 });
+
 
 </script>
 
