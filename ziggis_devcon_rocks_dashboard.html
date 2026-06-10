@@ -296,7 +296,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <main class="main">
   <!-- global summary -->
   <div class="summary-bar">
-    <div class="sb-item"><span class="sb-dot" style="background:#888"></span><span class="sb-val" id="sb-fas">343</span> total FAs signed</div>
+    <div class="sb-item" onclick="openOpenFAsEdit()" style="cursor:pointer" title="SNO franchisee FAs + open-store FAs — click to edit the open-store FA count"><span class="sb-dot" style="background:#888"></span><span class="sb-val" id="sb-fas">343</span> total FAs signed</div>
     <div class="sb-div"></div>
     <div class="sb-item"><span class="sb-dot" style="background:var(--blue)"></span><span class="sb-val" id="sb-sno">154</span> signed not open</div>
     <div class="sb-div"></div>
@@ -304,7 +304,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="sb-div"></div>
     <div class="sb-item"><span class="sb-dot" style="background:var(--tan)"></span><span class="sb-val" id="sb-planning">29</span> in planning</div>
     <div class="sb-div"></div>
-    <div class="sb-item"><span class="sb-dot" style="background:var(--red)"></span><span class="sb-val">15</span> resale-ready</div>
+    <div class="sb-item"><span class="sb-dot" style="background:var(--red)"></span><span class="sb-val" id="sb-resale">15</span> resale-ready</div>
   </div>
 
   <div class="tab-panel active" id="panel-sno">
@@ -402,8 +402,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
   <!-- KPIs -->
   <div class="section-kpis three">
-    <div class="kpi green"><div class="kpi-v" id="os-construction-count" style="color:var(--green)">—</div><div class="kpi-l">Under Construction</div></div>
-    <div class="kpi"><div class="kpi-v" id="os-planning-count">—</div><div class="kpi-l">In Planning</div></div>
+    <div class="kpi green"><div class="kpi-v" id="os-construction-count" style="color:var(--green)">—</div><div class="kpi-l">Under Construction</div><div class="kpi-s" id="os-construction-sub">incl. corporate stores</div></div>
+    <div class="kpi"><div class="kpi-v" id="os-planning-count">—</div><div class="kpi-l">In Planning</div><div class="kpi-s" id="os-planning-sub">incl. corporate stores</div></div>
     <div class="kpi blue"><div class="kpi-v" id="os-states-count" style="color:var(--blue-dk)">—</div><div class="kpi-l">States</div></div>
   </div>
 
@@ -466,6 +466,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <select class="form-select" id="os-category">
           <option value="Under Construction">Under Construction</option>
           <option value="Planning">Planning</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Owner Type</label>
+        <select class="form-select" id="os-ownertype">
+          <option value="Franchisee">Franchisee</option>
+          <option value="Corporate">Corporate</option>
         </select>
       </div>
       <div class="form-group">
@@ -882,6 +889,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <button class="btn-cancel" onclick="closeModalSNO()">Cancel</button>
       <button class="btn-save" onclick="saveSNO()">Save</button>
     </div>
+  </div>
+</div>
+
+</main>
+
 <script>
 
 function showTab(id){
@@ -946,152 +958,23 @@ function parseStrength(val) {
   return '';
 }
 
-// Live data containers — populated by loadAllData()
-let ACTIVE = [], IDLE = [], NGTO = [];
-let CONSTRUCTION = [], PLANNING = [], RESALE = [];
-let KPI = {};
-
-async function loadAllData() {
-  showLoading(true);
-  try {
-    // Run all fetches — catch individually so one failure doesn't block everything
-    await Promise.allSettled([
-      loadSiteSelection(),
-      loadActive(),
-      loadIdle(),
-      loadNeverOpen()
-    ]);
-  } catch(err) {
-    console.warn('Some data could not load:', err.message);
-  } finally {
-    showLoading(false);
-    renderDashboard();
-  }
+// ── SUMMARY BANNER ──
+// All banner numbers now derive from the live dashboard sheets managed in this HTML —
+// the old Site Selection tab is no longer used.
+//   signed not open  = all SNO_Dashboard rows (1 row = 1 FA; the SNO tab is franchisee-only)
+//   total FAs signed = SNO franchisee FAs + open-store FAs (editable: click the banner number)
+//   construction / planning = OpenStores_Dashboard counts
+//   resale-ready     = Resale_Dashboard "Can Sell" count
+function updateBanner() {
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const snoFAs = (SNO_DATA || []).length; // SNO tab is franchisee-only — every row counts
+  const openFAs = parseInt(SETTINGS.OpenFAs) || 0;
+  setEl('sb-sno', snoFAs);
+  setEl('sb-fas', snoFAs + openFAs);
+  setEl('sb-construct', (OS_STORES || []).filter(s => s.category === 'Under Construction').length);
+  setEl('sb-planning',  (OS_STORES || []).filter(s => s.category === 'Planning').length);
+  setEl('sb-resale',    (RESALE_STORES || []).filter(s => s.category === 'Can Sell').length);
 }
-
-async function loadSiteSelection() {
-  if (!ROCKS_API_URL) return;
-  try {
-    const res  = await fetch(ROCKS_API_URL + '?type=kpi');
-    const data = await res.json();
-    if (data.success && data.kpi) {
-      KPI = {
-        totalFAs:   parseInt(data.kpi.totalFAs)   || KPI.totalFAs   || 343,
-        openStores: parseInt(data.kpi.openStores)  || KPI.openStores || 108,
-        construct:  parseInt(data.kpi.construct)   || KPI.construct  || 6,
-        planning:   parseInt(data.kpi.planning)    || KPI.planning   || 29,
-        sno:        parseInt(data.kpi.sno)         || KPI.sno        || 155,
-        activeFA:   parseInt(data.kpi.activeFA)    || KPI.activeFA   || 25,
-        idle:       parseInt(data.kpi.idle)        || KPI.idle       || 58,
-        neverOpen:  parseInt(data.kpi.neverOpen)   || KPI.neverOpen  || 72,
-        budget2026: parseInt(data.kpi.budget2026)  || KPI.budget2026 || 19,
-        closed:     parseInt(data.kpi.closed)      || KPI.closed     || 0
-      };
-      updateKPIs();
-    }
-  } catch(e) { console.warn('KPI load error:', e); }
-}
-
-
-async function loadActive() {
-  const rows = await fetchSheet('Active');
-  // Header row is row index 2; data starts at row index 3
-  const hdr = rows[2];
-  const iName = colIndex(hdr, 'Franchisee ') !== -1 ? colIndex(hdr, 'Franchisee ') : colIndex(hdr, 'Franchisee');
-  const iState = colIndex(hdr, 'State');
-  const iActive = colIndex(hdr, 'Active (24)') !== -1 ? colIndex(hdr, 'Active (24)') : 
-                  hdr.findIndex(h => h.toLowerCase().includes('active'));
-  const iFinance = hdr.findIndex(h => h.toLowerCase().includes('finance strength'));
-  
-  ACTIVE = [];
-  // Budget franchisees — second table starts around col 8
-  // Find 2026 Budget header
-  const iBudgetHdr = hdr.findIndex(h => h.toLowerCase().includes('2026 budget'));
-  const iBudgetName = iBudgetHdr !== -1 ? iBudgetHdr : -1;
-  const iBudgetState = iBudgetHdr !== -1 ? iBudgetHdr + 1 : -1;
-
-  for (let i = 3; i < rows.length; i++) {
-    const row = rows[i];
-    if (!row[iName] && row[iName] !== '0') continue;
-    const name = row[iName];
-    if (!name || name === 'Franchisee' || name === 'Franchisee ') continue;
-    ACTIVE.push({
-      n: name,
-      s: iState >= 0 ? row[iState] : '',
-      active: iActive >= 0 ? (row[iActive] || '0') : '0',
-      f: iFinance >= 0 ? parseStrength(row[iFinance]) : '',
-      b: false // will determine from budget list
-    });
-  }
-
-  // Mark budget franchisees
-  if (iBudgetName >= 0) {
-    for (let i = 3; i < rows.length; i++) {
-      const bName = rows[i][iBudgetName];
-      if (bName && bName !== 'Franchisee ' && bName !== 'Franchisee') {
-        const found = ACTIVE.find(a => a.n === bName);
-        if (found) found.b = true;
-      }
-    }
-  }
-}
-
-async function loadIdle() {
-  const rows = await fetchSheet('Idle');
-  if (rows.length < 4) return;
-  const hdr = rows[2];
-  const iName = hdr.findIndex(h => h.toLowerCase().includes('franchisee'));
-  const iState = colIndex(hdr, 'State');
-  const iDate = colIndex(hdr, 'Signing Date');
-  const iFA = hdr.findIndex(h => h.toLowerCase().startsWith('fa'));
-
-  IDLE = [];
-  for (let i = 3; i < rows.length; i++) {
-    const row = rows[i];
-    const name = row[iName];
-    if (!name || name.toLowerCase().includes('franchisee')) continue;
-    const fa = iFA >= 0 ? (parseInt(row[iFA]) || 0) : 0;
-    if (!name && fa === 0) continue;
-    IDLE.push({
-      n: name,
-      s: iState >= 0 ? row[iState] : '',
-      fa: fa,
-      d: iDate >= 0 ? row[iDate] : '',
-      f: ''
-    });
-  }
-}
-
-async function loadNeverOpen() {
-  const rows = await fetchSheet('Never Open');
-  if (rows.length < 4) return;
-  const hdr = rows[2];
-  const iName = hdr.findIndex(h => h.toLowerCase().includes('franchisee'));
-  const iState = colIndex(hdr, 'State');
-  const iDate = colIndex(hdr, 'Signing Date');
-  const iFA = hdr.findIndex(h => h.toLowerCase().startsWith('fa'));
-
-  NGTO = [];
-  for (let i = 3; i < rows.length; i++) {
-    const row = rows[i];
-    const name = row[iName];
-    if (!name || name.toLowerCase().includes('franchisee')) continue;
-    const fa = iFA >= 0 ? (parseInt(row[iFA]) || 0) : 0;
-    NGTO.push({
-      n: name,
-      s: iState >= 0 ? row[iState] : '',
-      fa: fa,
-      d: iDate >= 0 ? row[iDate] : '',
-      f: ''
-    });
-  }
-}
-
-
-
-
-
-
 
 // ── UI HELPERS ──
 function showLoading(on) {
@@ -1131,32 +1014,6 @@ let ss={};
 
 
 
-function renderDashboard(){
-  updateKPIs();
-  init();
-  showTab('sno');
-  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-}
-
-function updateKPIs(){
-  const setEl = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
-  // Summary bar
-  setEl('sb-sno',      KPI.sno         || 154);
-  setEl('sb-open',     KPI.openStores  || 108);
-  setEl('sb-construct',KPI.construct   || 6);
-  setEl('sb-planning', KPI.planning    || 29);
-  setEl('sb-fas',      KPI.totalFAs    || 343);
-  // Tab badges
-  setEl('badge-sno',   KPI.sno         || 154);
-  setEl('badge-open',  KPI.openStores  || 108);
-}
-
-
-
-function init(){
-  // Tables removed from DOM — no rendering needed.
-}
-loadAllData();
 
 // ── CONTRACTS ──
 let CONTRACTS = [];
@@ -1344,7 +1201,7 @@ function closeContractsModal() {
 });
 
 // ── SETTINGS ──
-let SETTINGS = { Budget2026: 19 };
+let SETTINGS = { Budget2026: 19, OpenFAs: 190 };
 
 async function loadSettings() {
   if (!ROCKS_API_URL) return;
@@ -1361,6 +1218,7 @@ async function loadSettings() {
 function renderSettings() {
   const el = document.getElementById('budget-label');
   if (el) el.textContent = SETTINGS.Budget2026 + ' in 2026 budget';
+  updateBanner();
 }
 
 function openBudgetEdit() {
@@ -1376,6 +1234,23 @@ function openBudgetEdit() {
     fetch(ROCKS_API_URL, {
       method: 'POST',
       body: JSON.stringify({ type:'settings', action:'update', key:'Budget2026', value:num })
+    }).catch(e => console.warn('Settings save error:', e));
+  }
+}
+
+function openOpenFAsEdit() {
+  const current = parseInt(SETTINGS.OpenFAs) || 190;
+  const val = prompt('Open-store FAs (added to SNO franchisee FAs for "total FAs signed"):', current);
+  if (val === null) return; // cancelled
+  const num = parseInt(val);
+  if (isNaN(num) || num < 0) { alert('Please enter a valid number.'); return; }
+  SETTINGS.OpenFAs = num;
+  renderSettings();
+  // Save to Google Sheet
+  if (ROCKS_API_URL) {
+    fetch(ROCKS_API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ type:'settings', action:'update', key:'OpenFAs', value:num })
     }).catch(e => console.warn('Settings save error:', e));
   }
 }
@@ -1648,13 +1523,6 @@ function closeModal() {
 
 
 
-// ── FINANCE STRENGTH ──
-// Source: Site Selection tab
-// Total SNO = rows where Search (col L) > 0
-// Active    = rows where Active FA (col M) > 0
-// Idle      = rows where Idle (col Z) > 0
-// NGTO      = rows where Will never Open (col Y) > 0
-// Strength  = Financial Strength column (col AB): "1 - weak", "2 - medium", "3 - strong"
 
 
 
@@ -1870,6 +1738,7 @@ function filterSNO(f, btn) {
 }
 
 function renderSNO() {
+  updateBanner();
   const filtered = snoFilter === 'all' ? SNO_DATA : SNO_DATA.filter(r => r.strength === snoFilter);
 
   ['Active','Idle','NGTO'].forEach(cat => {
@@ -2177,6 +2046,7 @@ async function deleteStoreFromSheet(id) {
 }
 
 function renderResale() {
+  updateBanner();
   const canSell     = RESALE_STORES.filter(s => s.category === 'Can Sell');
   const shouldClose = RESALE_STORES.filter(s => s.category === 'Should Close');
   const states      = [...new Set(RESALE_STORES.map(s => s.state).filter(Boolean))];
@@ -2351,6 +2221,7 @@ async function loadOpenStores() {
         state:      s.State      || '',
         layout:     s.Layout     || '',
         category:   s.Category   || 'Under Construction',
+        ownerType:  s['Owner Type'] || 'Franchisee',
         openDate:   s['Open Date'] || '',
         notes:      s.Notes      || ''
       }));
@@ -2375,6 +2246,7 @@ async function saveStore_OS_sheet(store, action) {
         type:'stores', action,
         id: store.id, franchisee: store.franchisee, location: store.location,
         state: store.state, layout: store.layout, category: store.category,
+        ownerType: store.ownerType || 'Franchisee',
         openDate: store.openDate, notes: store.notes
       })
     });
@@ -2389,13 +2261,20 @@ async function deleteStore_OS_sheet(id) {
 }
 
 function renderOpenStores() {
+  updateBanner();
   const construction = OS_STORES.filter(s => s.category === 'Under Construction');
   const planning     = OS_STORES.filter(s => s.category === 'Planning');
   const states       = [...new Set(OS_STORES.map(s => s.state).filter(Boolean))];
 
   const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  const split = arr => {
+    const corp = arr.filter(s => (s.ownerType||'Franchisee')==='Corporate').length;
+    return corp ? `${arr.length-corp} franchisee · ${corp} corporate` : 'all franchisee';
+  };
   setEl('os-construction-count', construction.length);
+  setEl('os-construction-sub',   split(construction));
   setEl('os-planning-count',     planning.length);
+  setEl('os-planning-sub',       split(planning));
   setEl('os-states-count',       states.length);
 
   const renderList = (stores, listId, emptyId) => {
@@ -2416,6 +2295,7 @@ function renderOpenStores() {
           <div class="rock-item-meta">
             ${s.franchisee ? `<span class="rock-item-owner">👤 ${s.franchisee}</span>` : ''}
             <span class="badge bst">${s.state}</span>
+            ${(s.ownerType||'Franchisee')==='Corporate' ? '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:#EFE9F5;color:#7B5EA7">CORP</span>' : ''}
             ${dueStr ? `<span style="font-size:11px;color:var(--brown-muted)">📅 ${dueStr}</span>` : ''}
           </div>
           ${s.layout ? `<div style="font-size:11.5px;color:var(--brown-muted);margin-top:3px">${s.layout}${s.notes?' · '+s.notes:''}</div>` : ''}
@@ -2440,6 +2320,7 @@ function openAddStore_OS() {
   document.getElementById('os-location').value = '';
   document.getElementById('os-layout').value = '';
   document.getElementById('os-category').value = 'Under Construction';
+  document.getElementById('os-ownertype').value = 'Franchisee';
   document.getElementById('os-opendate').value = '';
   document.getElementById('os-notes').value = '';
   document.getElementById('os-delete-btn').style.display = 'none';
@@ -2457,6 +2338,7 @@ function openEditStore_OS(id) {
   document.getElementById('os-location').value = s.location;
   document.getElementById('os-layout').value = s.layout;
   document.getElementById('os-category').value = s.category;
+  document.getElementById('os-ownertype').value = s.ownerType || 'Franchisee';
   document.getElementById('os-opendate').value = s.openDate || '';
   document.getElementById('os-notes').value = s.notes || '';
   document.getElementById('os-delete-btn').style.display = 'inline-block';
@@ -2472,6 +2354,7 @@ async function saveStore_OS() {
     location,
     layout:     document.getElementById('os-layout').value.trim(),
     category:   document.getElementById('os-category').value,
+    ownerType:  document.getElementById('os-ownertype').value,
     openDate:   document.getElementById('os-opendate').value,
     notes:      document.getElementById('os-notes').value.trim()
   };
@@ -2674,7 +2557,6 @@ window.addEventListener('DOMContentLoaded', function() {
     loadOpenStores();
     loadSNO();
     loadContracts();
-    loadAllData();
   } catch(e) {
     console.error('Startup error:', e);
     document.body.insertAdjacentHTML('afterbegin',
