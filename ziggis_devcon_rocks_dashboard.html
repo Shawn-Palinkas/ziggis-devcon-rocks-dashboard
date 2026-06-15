@@ -1248,7 +1248,7 @@ function closeContractsModal() {
 });
 
 // ── SETTINGS ──
-let SETTINGS = { Budget2026: 19, OpenFAs: 190 };
+let SETTINGS = { Budget2026: 19, OpenFAs: 190, SnoSortAZ: '' };
 
 async function loadSettings() {
   if (!ROCKS_API_URL) return;
@@ -1257,7 +1257,9 @@ async function loadSettings() {
     const data = await res.json();
     if (data.success && data.settings) {
       SETTINGS = { ...SETTINGS, ...data.settings };
+      applySnoSortFromSettings();
       renderSettings();
+      renderSNO(); // reflect the saved A–Z state for everyone
     }
   } catch(e) { console.warn('Settings load error:', e); }
 }
@@ -1886,6 +1888,29 @@ function filterSNO(f, btn) {
   renderSNO();
 }
 
+// Per-category A–Z toggle for SNO (false = original sheet order, true = A–Z by name)
+// Persisted to the Settings sheet (key SnoSortAZ = comma list of sorted categories)
+// so the chosen sort is shared across everyone who opens the dashboard.
+let snoSort = { Active:false, Idle:false, NGTO:false };
+
+function applySnoSortFromSettings() {
+  const on = String(SETTINGS.SnoSortAZ || '').split(',').map(s=>s.trim()).filter(Boolean);
+  snoSort = { Active:on.includes('Active'), Idle:on.includes('Idle'), NGTO:on.includes('NGTO') };
+}
+
+function toggleSnoSort(cat) {
+  snoSort[cat] = !snoSort[cat];
+  renderSNO();
+  const onList = ['Active','Idle','NGTO'].filter(c => snoSort[c]).join(',');
+  SETTINGS.SnoSortAZ = onList;
+  if (ROCKS_API_URL) {
+    fetch(ROCKS_API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ type:'settings', action:'update', key:'SnoSortAZ', value:onList })
+    }).catch(e => console.warn('Sort save error:', e));
+  }
+}
+
 function renderSNO() {
   updateBanner();
   const filtered = snoFilter === 'all' ? SNO_DATA : SNO_DATA.filter(r => r.strength === snoFilter);
@@ -1962,7 +1987,10 @@ function renderSNO() {
       grouped[r.name].push(r);
     });
 
-    listEl.innerHTML = Object.entries(grouped).map(([name, fas]) => {
+    let groupedEntries = Object.entries(grouped);
+    // Always alphabetize by franchisee name so moved projects land in order automatically
+    groupedEntries.sort((a,b) => a[0].localeCompare(b[0], undefined, {sensitivity:'base'}));
+    listEl.innerHTML = groupedEntries.map(([name, fas]) => {
       const rep = fas[0];
       const faCount = fas.length;
       const strengthBadge = rep.strength
@@ -2200,6 +2228,11 @@ function renderResale() {
   const shouldClose = RESALE_STORES.filter(s => s.category === 'Should Close');
   const states      = [...new Set(RESALE_STORES.map(s => s.state).filter(Boolean))];
 
+  // Auto-sort both columns alphabetically by location
+  const byLocation = (a,b) => (a.location||'').localeCompare(b.location||'', undefined, {sensitivity:'base'});
+  canSell.sort(byLocation);
+  shouldClose.sort(byLocation);
+
   const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
   setEl('resale-can-sell-count',    canSell.length);
   setEl('resale-should-close-count',shouldClose.length);
@@ -2434,6 +2467,13 @@ function renderOpenStores() {
   const planning     = OS_STORES.filter(s => s.category === 'Planning' && !isPaused(s));
   const paused       = OS_STORES.filter(isPaused);
   const states       = [...new Set(OS_STORES.map(s => s.state).filter(Boolean))];
+
+  // Auto-sort: UC / Planning / On Pause alphabetically by location; Open by open date (most recent first)
+  const byLocation = (a,b) => (a.location||'').localeCompare(b.location||'', undefined, {sensitivity:'base'});
+  construction.sort(byLocation);
+  planning.sort(byLocation);
+  paused.sort(byLocation);
+  open.sort((a,b) => (b.openDate||'').localeCompare(a.openDate||''));
 
   const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
   const split = arr => {
