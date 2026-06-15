@@ -1349,7 +1349,7 @@ async function loadRocks() {
         cat:      r.Category || '',
         title:    r.Title || '',
         owner:    r.Owner || '',
-        due:      r['Due Date'] || '',
+        due:      toISODate(r['Due Date']),
         status:   r.Status || 'new',
         progress: parseInt(r.Progress) || 0,
         notes:    r.Notes || '',
@@ -1522,8 +1522,8 @@ function renderRocks() {
     listEl.innerHTML = catRocks.map(r => {
       const s = STATUS[r.status] || STATUS.new;
       const prog = Math.min(100, r.progress||0);
-      const dueStr = r.due ? new Date(r.due+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
-      const dl = r.due ? Math.round((new Date(r.due+'T00:00:00')-new Date())/86400000) : null;
+      let dueStr = '', dl = null;
+      if (r.due) { const _d = new Date(r.due+'T00:00:00'); if (!isNaN(_d)) { dueStr = _d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); dl = Math.round((_d - new Date())/86400000); } }
       const dueColor = dl!==null&&dl<0?'#C05530':dl!==null&&dl<=14?'#A07840':'#888';
       return `<div class="rock-item" onclick="openEditRock(${r.id})">
         <div class="rock-item-left">
@@ -1594,7 +1594,7 @@ function openEditRock(id) {
   document.getElementById('edit-rock-cat').value = r.cat;
   populateRockQuarterSelect(rockQuarter(r));
   document.getElementById('edit-rock-owner').value = r.owner||'';
-  document.getElementById('edit-rock-due').value = r.due||'';
+  document.getElementById('edit-rock-due').value = toISODate(r.due);
   document.getElementById('edit-rock-status').value = r.status;
   document.getElementById('edit-rock-progress').value = r.progress||0;
   document.getElementById('edit-rock-progress-range').value = r.progress||0;
