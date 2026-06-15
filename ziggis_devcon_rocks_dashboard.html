@@ -650,7 +650,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="section-title-group">
       <div class="section-title">Rocks — 90-Day Priorities</div>
     </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <label class="form-label" style="margin:0">Quarter</label>
+      <select class="form-select" id="rocks-quarter-filter" style="width:auto;min-width:150px" onchange="changeQuarter(this.value)"></select>
+    </div>
   </div>
+
+  <!-- Per-quarter overview chips -->
+  <div id="rocks-quarter-overview" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.1rem"></div>
 
   <!-- KPIs -->
   <div class="rocks-kpis">
@@ -784,6 +791,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
           <option value="Resale">Resale</option>
           <option value="Real Estate Committee">Real Estate Committee</option>
         </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quarter</label>
+        <select class="form-select" id="edit-rock-quarter"></select>
       </div>
       <div class="form-group">
         <label class="form-label">Owner</label>
@@ -1287,6 +1298,30 @@ let ROCKS_API_URL = localStorage.getItem('ziggis_rocks_api_url') || 'https://scr
 let ROCKS = [];
 let rockIdCounter = 1;
 let editingId = null;
+let selectedQuarter = 'all'; // Rocks tab quarter filter defaults to All Quarters; a specific quarter (e.g. 'Q2 2026') filters
+
+// ── QUARTER HELPERS ──
+function currentQuarter() {
+  const d = new Date();
+  return 'Q' + (Math.floor(d.getMonth()/3) + 1) + ' ' + d.getFullYear();
+}
+function quarterIndex(q) { // 'Q3 2026' -> sortable integer
+  const m = /Q(\d)\s+(\d{4})/.exec(q || '');
+  return m ? (parseInt(m[2])*4 + (parseInt(m[1])-1)) : -1;
+}
+function quarterFromIndex(idx) {
+  return 'Q' + ((idx % 4) + 1) + ' ' + Math.floor(idx / 4);
+}
+// Distinct quarters: a standard window around now, unioned with whatever's in the data
+function quarterOptions() {
+  const set = new Set();
+  const base = quarterIndex(currentQuarter());
+  for (let i = -2; i <= 5; i++) set.add(quarterFromIndex(base + i)); // 2 back, 5 ahead
+  ROCKS.forEach(r => { if (r.quarter) set.add(r.quarter); });
+  set.add(currentQuarter());
+  return [...set].sort((a,b) => quarterIndex(b) - quarterIndex(a)); // newest first
+}
+function rockQuarter(r) { return r.quarter || currentQuarter(); } // blanks treated as current
 
 const CAT_MAP = {
   'SNO':                   { listId:'rock-list-sno',    emptyId:'rock-empty-sno',    progId:'cat-sno-progress',    color:'#72B1CB' },
@@ -1317,7 +1352,8 @@ async function loadRocks() {
         due:      r['Due Date'] || '',
         status:   r.Status || 'new',
         progress: parseInt(r.Progress) || 0,
-        notes:    r.Notes || ''
+        notes:    r.Notes || '',
+        quarter:  r.Quarter || ''
       }));
       // set counter above highest id
       rockIdCounter = Math.max(...ROCKS.map(r => r.id), 0) + 1;
@@ -1325,6 +1361,7 @@ async function loadRocks() {
   } catch(e) {
     console.warn('Could not load rocks:', e);
   }
+  populateQuarterFilter();
   renderRocks();
 }
 
@@ -1342,7 +1379,8 @@ async function saveRockToSheet(rock, action) {
         due:      rock.due,
         status:   rock.status,
         progress: rock.progress,
-        notes:    rock.notes
+        notes:    rock.notes,
+        quarter:  rock.quarter || ''
       })
     });
   } catch(e) {
@@ -1382,14 +1420,71 @@ function saveApiUrl() {
   loadRocks();
 }
 
+// ── QUARTER FILTER + OVERVIEW ──
+function changeQuarter(val) {
+  selectedQuarter = val;
+  renderRocks();
+}
+
+function populateQuarterFilter() {
+  const sel = document.getElementById('rocks-quarter-filter');
+  if (!sel) return;
+  const opts = quarterOptions();
+  if (selectedQuarter !== 'all' && !opts.includes(selectedQuarter)) selectedQuarter = currentQuarter();
+  sel.innerHTML = '<option value="all">All Quarters</option>' +
+    opts.map(q => `<option value="${q}">${q}</option>`).join('');
+  sel.value = selectedQuarter;
+}
+
+function renderQuarterOverview() {
+  const wrap = document.getElementById('rocks-quarter-overview');
+  if (!wrap) return;
+  // Group every rock by quarter, compute count + completion %
+  const groups = {};
+  ROCKS.forEach(r => {
+    const q = rockQuarter(r);
+    (groups[q] = groups[q] || []).push(r);
+  });
+  const quarters = Object.keys(groups).sort((a,b) => quarterIndex(b) - quarterIndex(a));
+  if (!quarters.length) { wrap.innerHTML = ''; return; }
+
+  const allChip = (() => {
+    const total = ROCKS.length;
+    const done = ROCKS.filter(r => r.status==='done').length;
+    const pct = total ? Math.round(done/total*100) : 0;
+    const active = selectedQuarter==='all';
+    return chip('all', 'All Quarters', total, pct, active);
+  })();
+
+  function chip(val, label, count, pct, active) {
+    const pctColor = pct>=75?'#4E9260':pct>=40?'#A07840':'#C05530';
+    return `<div onclick="changeQuarter('${val}')" style="cursor:pointer;border:1px solid ${active?'#7B5EA7':'var(--border)'};background:${active?'#F0EBF8':'#fff'};border-radius:8px;padding:8px 12px;min-width:108px">
+      <div style="font-size:12px;font-weight:700;color:var(--brown)">${label}</div>
+      <div style="font-size:11px;color:var(--brown-muted);margin-top:2px">${count} rock${count!==1?'s':''} · <b style="color:${pctColor}">${pct}%</b></div>
+    </div>`;
+  }
+
+  wrap.innerHTML = allChip + quarters.map(q => {
+    const rocks = groups[q];
+    const done = rocks.filter(r => r.status==='done').length;
+    const pct = rocks.length ? Math.round(done/rocks.length*100) : 0;
+    return chip(q, q, rocks.length, pct, selectedQuarter===q);
+  }).join('');
+}
+
 // ── RENDER ──
 function renderRocks() {
+  populateQuarterFilter();
+  renderQuarterOverview();
   const cats = Object.keys(CAT_MAP);
   let total=0, on=0, off=0, done=0, progSum=0;
 
+  // Filter to the selected quarter (blank-quarter rocks count as the current quarter)
+  const visible = selectedQuarter==='all' ? ROCKS : ROCKS.filter(r => rockQuarter(r) === selectedQuarter);
+
   cats.forEach(cat => {
     const { listId, emptyId, progId } = CAT_MAP[cat];
-    const catRocks = ROCKS.filter(r => r.cat === cat);
+    const catRocks = visible.filter(r => r.cat === cat);
     const listEl  = document.getElementById(listId);
     const emptyEl = document.getElementById(emptyId);
     const progEl  = document.getElementById(progId);
@@ -1462,12 +1557,22 @@ function renderRocks() {
 }
 
 // ── ADD / EDIT / DELETE ──
+function populateRockQuarterSelect(value) {
+  const sel = document.getElementById('edit-rock-quarter');
+  if (!sel) return;
+  const opts = quarterOptions();
+  if (value && !opts.includes(value)) opts.unshift(value); // keep an out-of-range value selectable
+  sel.innerHTML = opts.map(q => `<option value="${q}">${q}</option>`).join('');
+  sel.value = value || currentQuarter();
+}
+
 function openAddRock(cat) {
   editingId = null;
   document.getElementById('modal-title').textContent = 'Add Rock — ' + cat;
   document.getElementById('edit-rock-id').value = '';
   document.getElementById('edit-rock-title').value = '';
   document.getElementById('edit-rock-cat').value = cat;
+  populateRockQuarterSelect(selectedQuarter==='all' ? currentQuarter() : selectedQuarter);
   document.getElementById('edit-rock-owner').value = '';
   document.getElementById('edit-rock-status').value = 'new';
   document.getElementById('edit-rock-progress').value = 0;
@@ -1487,6 +1592,7 @@ function openEditRock(id) {
   document.getElementById('edit-rock-id').value = r.id;
   document.getElementById('edit-rock-title').value = r.title;
   document.getElementById('edit-rock-cat').value = r.cat;
+  populateRockQuarterSelect(rockQuarter(r));
   document.getElementById('edit-rock-owner').value = r.owner||'';
   document.getElementById('edit-rock-due').value = r.due||'';
   document.getElementById('edit-rock-status').value = r.status;
@@ -1507,7 +1613,8 @@ async function saveRock() {
     due:      document.getElementById('edit-rock-due').value,
     status:   document.getElementById('edit-rock-status').value,
     progress: parseInt(document.getElementById('edit-rock-progress').value)||0,
-    notes:    document.getElementById('edit-rock-notes').value.trim()
+    notes:    document.getElementById('edit-rock-notes').value.trim(),
+    quarter:  document.getElementById('edit-rock-quarter').value
   };
   if (editingId !== null) {
     const r = ROCKS.find(x=>x.id===editingId);
@@ -1516,6 +1623,11 @@ async function saveRock() {
     const newRock = { id: rockIdCounter++, ...data };
     ROCKS.push(newRock);
     await saveRockToSheet(newRock, 'add');
+  }
+  // Follow the rock to its quarter so it doesn't appear to vanish when its
+  // quarter differs from the one currently being viewed. (Leave 'All Quarters' alone.)
+  if (selectedQuarter !== 'all' && data.quarter && data.quarter !== selectedQuarter) {
+    selectedQuarter = data.quarter;
   }
   closeModal();
   renderRocks();
@@ -2228,6 +2340,20 @@ const OS_DEFAULTS = [
 ];
 
 
+// Normalize any date the sheet hands back (ISO, ISO+time, US M/D/YYYY, or a real
+// Date) into a clean 'YYYY-MM-DD' string. Returns '' if it can't be parsed.
+function toISODate(v) {
+  if (v === null || v === undefined || v === '') return '';
+  if (v instanceof Date) return isNaN(v) ? '' : v.toISOString().slice(0,10);
+  const s = String(v).trim();
+  let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s);           // 2026-07-14 or 2026-7-4 (with/without time)
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/.exec(s);  // 7/14/2026 or 7-14-2026 (US M/D/Y)
+  if (m) return `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  const d = new Date(s);                                       // last resort
+  return isNaN(d) ? '' : d.toISOString().slice(0,10);
+}
+
 async function loadOpenStores() {
   if (!ROCKS_API_URL) { OS_STORES = [...OS_DEFAULTS]; renderOpenStores(); return; }
   try {
@@ -2243,7 +2369,7 @@ async function loadOpenStores() {
         category:   s.Category   || 'Under Construction',
         ownerType:  s['Owner Type'] || 'Franchisee',
         status:     s.Status || 'Active',
-        openDate:   s['Open Date'] || '',
+        openDate:   toISODate(s['Open Date']),
         notes:      s.Notes      || ''
       }));
       osIdCounter = Math.max(...OS_STORES.map(s=>s.id), 300) + 1;
@@ -2323,7 +2449,8 @@ function renderOpenStores() {
     }
     if (emptyEl) emptyEl.style.display = 'none';
     listEl.innerHTML = stores.map(s => {
-      const dueStr = s.openDate ? new Date(s.openDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+      let dueStr = '';
+      if (s.openDate) { const _d = new Date(s.openDate+'T00:00:00'); if (!isNaN(_d)) dueStr = _d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
       const corpChip = (s.ownerType||'Franchisee')==='Corporate' ? '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:#EFE9F5;color:#7B5EA7">CORP</span>' : '';
       // In the On Pause column, show which stage the project was paused at
       const stageChip = opts.showStage ? `<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:var(--tan-lt);color:var(--tan-dk)">${s.category==='Under Construction'?'CONSTRUCTION':'PLANNING'}</span>` : '';
@@ -2383,7 +2510,7 @@ function openEditStore_OS(id) {
   document.getElementById('os-category').value = s.category;
   document.getElementById('os-ownertype').value = s.ownerType || 'Franchisee';
   document.getElementById('os-status').value = s.status || 'Active';
-  document.getElementById('os-opendate').value = s.openDate || '';
+  document.getElementById('os-opendate').value = toISODate(s.openDate);
   document.getElementById('os-notes').value = s.notes || '';
   document.getElementById('os-delete-btn').style.display = 'inline-block';
   document.getElementById('os-modal').classList.add('open');
