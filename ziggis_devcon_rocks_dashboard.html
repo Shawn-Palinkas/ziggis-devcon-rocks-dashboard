@@ -61,6 +61,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .section-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:1.5rem}
 .section-kpis.three{grid-template-columns:repeat(3,1fr)}
 .section-kpis.two{grid-template-columns:repeat(2,1fr)}
+.section-kpis.five{grid-template-columns:repeat(5,1fr)}
 .kpi{background:var(--amber-lt);border:0.5px solid var(--tan-mid);border-radius:var(--radius-sm);padding:1.4rem 1.2rem;text-align:center}
 .kpi-v{font-size:40px;font-weight:700;line-height:1;color:var(--brown)}
 .kpi-l{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--brown-muted);margin-top:4px}
@@ -402,15 +403,29 @@ textarea.form-input{resize:vertical;min-height:38px;line-height:1.4}
   </div>
 
   <!-- KPIs -->
-  <div class="section-kpis">
+  <div class="section-kpis five">
+    <div class="kpi" style="background:#F0EBF8;border-color:rgba(123,94,167,.25)"><div class="kpi-v" id="os-open-count" style="color:#7B5EA7">—</div><div class="kpi-l">Open</div><div class="kpi-s" id="os-open-sub">now open for business</div></div>
     <div class="kpi green"><div class="kpi-v" id="os-construction-count" style="color:var(--green)">—</div><div class="kpi-l">Under Construction</div><div class="kpi-s" id="os-construction-sub">incl. corporate stores</div></div>
     <div class="kpi"><div class="kpi-v" id="os-planning-count">—</div><div class="kpi-l">In Planning</div><div class="kpi-s" id="os-planning-sub">active sites</div></div>
     <div class="kpi"><div class="kpi-v" id="os-paused-count" style="color:var(--tan-dk)">—</div><div class="kpi-l">On Pause</div><div class="kpi-s" id="os-paused-sub">temporarily stalled</div></div>
     <div class="kpi blue"><div class="kpi-v" id="os-states-count" style="color:var(--blue-dk)">—</div><div class="kpi-l">States</div></div>
   </div>
 
-  <!-- Three category columns -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px">
+  <!-- Four category columns -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:18px">
+
+    <!-- OPEN -->
+    <div class="rock-category-card">
+      <div class="rock-cat-header" style="border-left:4px solid #7B5EA7">
+        <div class="rock-cat-icon" style="background:#F0EBF8;color:#7B5EA7">🏪</div>
+        <div>
+          <div class="rock-cat-title">Open <span class="open-count-badge" id="os-cc-open" style="background:#F0EBF8;border-color:rgba(123,94,167,.35);color:#7B5EA7">0</span></div>
+          <div class="rock-cat-sub">Now open for business</div>
+        </div>
+      </div>
+      <div class="rock-list" id="os-list-open"></div>
+      <div class="rock-list-empty" id="os-empty-open">No stores marked open yet</div>
+    </div>
 
     <!-- UNDER CONSTRUCTION -->
     <div class="rock-category-card">
@@ -479,6 +494,7 @@ textarea.form-input{resize:vertical;min-height:38px;line-height:1.4}
       <div class="form-group">
         <label class="form-label">Category</label>
         <select class="form-select" id="os-category">
+          <option value="Open">Open</option>
           <option value="Under Construction">Under Construction</option>
           <option value="Planning">Planning</option>
         </select>
@@ -2413,6 +2429,7 @@ function renderOpenStores() {
   updateBanner();
   const isPaused = s => (s.status||'Active') === 'On Pause';
   // Paused projects pull out of their category into the On Pause column
+  const open         = OS_STORES.filter(s => s.category === 'Open' && !isPaused(s));
   const construction = OS_STORES.filter(s => s.category === 'Under Construction' && !isPaused(s));
   const planning     = OS_STORES.filter(s => s.category === 'Planning' && !isPaused(s));
   const paused       = OS_STORES.filter(isPaused);
@@ -2426,6 +2443,8 @@ function renderOpenStores() {
   };
 
   // KPI cards
+  setEl('os-open-count',         open.length);
+  setEl('os-open-sub',           open.length ? split(open) : 'none yet');
   setEl('os-construction-count', construction.length);
   { const e=document.getElementById('os-construction-sub'); if(e) e.innerHTML='<b style="color:var(--green)">Active</b> · '+split(construction); }
   setEl('os-planning-count',     planning.length);
@@ -2435,6 +2454,7 @@ function renderOpenStores() {
   setEl('os-states-count',       states.length);
 
   // Per-column count pills
+  setEl('os-cc-open',         open.length);
   setEl('os-cc-construction', construction.length);
   setEl('os-cc-planning',     planning.length);
   setEl('os-cc-paused',       paused.length);
@@ -2471,14 +2491,16 @@ function renderOpenStores() {
     }).join('');
   };
 
+  renderList(open,         'os-list-open',         'os-empty-open');
   renderList(construction, 'os-list-construction', 'os-empty-construction');
   renderList(planning,     'os-list-planning',     'os-empty-planning');
   renderList(paused,       'os-list-paused',       'os-empty-paused', {showStage:true});
 
-  // Header badge — overall, active, and paused totals at a glance
+  // Header badge — pipeline (pre-open) plus active, paused, and open totals
   const active = construction.length + planning.length;
+  const pipeline = OS_STORES.length - open.length; // open stores are no longer in the pre-open pipeline
   const badge = document.getElementById('open-stores-badge');
-  if (badge) badge.textContent = `${OS_STORES.length} in pipeline · ${active} active · ${paused.length} on pause`;
+  if (badge) badge.textContent = `${pipeline} in pipeline · ${active} active · ${paused.length} on pause · ${open.length} open`;
 }
 
 function openAddStore_OS() {
