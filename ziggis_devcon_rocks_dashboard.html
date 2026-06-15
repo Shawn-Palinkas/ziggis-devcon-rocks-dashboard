@@ -296,7 +296,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <main class="main">
   <!-- global summary -->
   <div class="summary-bar">
-    <div class="sb-item" onclick="openOpenFAsEdit()" style="cursor:pointer" title="SNO franchisee FAs + open-store FAs — click to edit the open-store FA count"><span class="sb-dot" style="background:#888"></span><span class="sb-val" id="sb-fas">343</span> total FAs signed</div>
+    <div class="sb-item" onclick="openOpenFAsEdit()" style="cursor:pointer" title="Click to edit the total FAs signed"><span class="sb-dot" style="background:#888"></span><span class="sb-val" id="sb-fas">343</span> total FAs signed</div>
     <div class="sb-div"></div>
     <div class="sb-item"><span class="sb-dot" style="background:var(--blue)"></span><span class="sb-val" id="sb-sno">154</span> signed not open</div>
     <div class="sb-div"></div>
@@ -401,21 +401,22 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   </div>
 
   <!-- KPIs -->
-  <div class="section-kpis three">
+  <div class="section-kpis">
     <div class="kpi green"><div class="kpi-v" id="os-construction-count" style="color:var(--green)">—</div><div class="kpi-l">Under Construction</div><div class="kpi-s" id="os-construction-sub">incl. corporate stores</div></div>
-    <div class="kpi"><div class="kpi-v" id="os-planning-count">—</div><div class="kpi-l">In Planning</div><div class="kpi-s" id="os-planning-sub">incl. corporate stores</div></div>
+    <div class="kpi"><div class="kpi-v" id="os-planning-count">—</div><div class="kpi-l">In Planning</div><div class="kpi-s" id="os-planning-sub">active sites</div></div>
+    <div class="kpi"><div class="kpi-v" id="os-paused-count" style="color:var(--tan-dk)">—</div><div class="kpi-l">On Pause</div><div class="kpi-s" id="os-paused-sub">temporarily stalled</div></div>
     <div class="kpi blue"><div class="kpi-v" id="os-states-count" style="color:var(--blue-dk)">—</div><div class="kpi-l">States</div></div>
   </div>
 
-  <!-- Two category columns -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+  <!-- Three category columns -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px">
 
     <!-- UNDER CONSTRUCTION -->
     <div class="rock-category-card">
       <div class="rock-cat-header" style="border-left:4px solid var(--green)">
         <div class="rock-cat-icon" style="background:var(--green-lt);color:var(--green)">🏗</div>
         <div>
-          <div class="rock-cat-title">Under Construction</div>
+          <div class="rock-cat-title">Under Construction <span class="open-count-badge" id="os-cc-construction">0</span></div>
           <div class="rock-cat-sub">Stores actively being built</div>
         </div>
       </div>
@@ -428,12 +429,25 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <div class="rock-cat-header" style="border-left:4px solid var(--blue)">
         <div class="rock-cat-icon" style="background:var(--blue-lt);color:var(--blue-dk)">📋</div>
         <div>
-          <div class="rock-cat-title">Planning</div>
-          <div class="rock-cat-sub">Sites identified, working toward construction</div>
+          <div class="rock-cat-title">Planning <span class="open-count-badge" id="os-cc-planning" style="background:var(--blue-lt);border-color:rgba(114,177,203,.35);color:var(--blue-dk)">0</span></div>
+          <div class="rock-cat-sub">Active sites working toward construction</div>
         </div>
       </div>
       <div class="rock-list" id="os-list-planning"></div>
-      <div class="rock-list-empty" id="os-empty-planning">No stores in planning</div>
+      <div class="rock-list-empty" id="os-empty-planning">No active stores in planning</div>
+    </div>
+
+    <!-- ON PAUSE -->
+    <div class="rock-category-card">
+      <div class="rock-cat-header" style="border-left:4px solid var(--tan)">
+        <div class="rock-cat-icon" style="background:var(--tan-lt);color:var(--tan-dk)">⏸</div>
+        <div>
+          <div class="rock-cat-title">On Pause <span class="open-count-badge" id="os-cc-paused" style="background:var(--tan-lt);border-color:var(--tan-mid);color:var(--tan-dk)">0</span></div>
+          <div class="rock-cat-sub">Temporarily stalled projects</div>
+        </div>
+      </div>
+      <div class="rock-list" id="os-list-paused"></div>
+      <div class="rock-list-empty" id="os-empty-paused">No projects on pause</div>
     </div>
 
   </div>
@@ -466,6 +480,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <select class="form-select" id="os-category">
           <option value="Under Construction">Under Construction</option>
           <option value="Planning">Planning</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="os-status">
+          <option value="Active">Active</option>
+          <option value="On Pause">On Pause</option>
         </select>
       </div>
       <div class="form-group">
@@ -962,15 +983,13 @@ function parseStrength(val) {
 // All banner numbers now derive from the live dashboard sheets managed in this HTML —
 // the old Site Selection tab is no longer used.
 //   signed not open  = all SNO_Dashboard rows (1 row = 1 FA; the SNO tab is franchisee-only)
-//   total FAs signed = SNO franchisee FAs + open-store FAs (editable: click the banner number)
+//   total FAs signed = a manually entered number (editable: click the banner number)
 //   construction / planning = OpenStores_Dashboard counts
 //   resale-ready     = Resale_Dashboard "Can Sell" count
 function updateBanner() {
   const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  const snoFAs = (SNO_DATA || []).length; // SNO tab is franchisee-only — every row counts
-  const openFAs = parseInt(SETTINGS.OpenFAs) || 0;
-  setEl('sb-sno', snoFAs);
-  setEl('sb-fas', snoFAs + openFAs);
+  setEl('sb-sno', (SNO_DATA || []).length); // signed-not-open stays live from SNO
+  setEl('sb-fas', parseInt(SETTINGS.TotalFAs) || 345); // total FAs is a manual value — click to edit
   setEl('sb-construct', (OS_STORES || []).filter(s => s.category === 'Under Construction').length);
   setEl('sb-planning',  (OS_STORES || []).filter(s => s.category === 'Planning').length);
   setEl('sb-resale',    (RESALE_STORES || []).filter(s => s.category === 'Can Sell').length);
@@ -1239,18 +1258,19 @@ function openBudgetEdit() {
 }
 
 function openOpenFAsEdit() {
-  const current = parseInt(SETTINGS.OpenFAs) || 190;
-  const val = prompt('Open-store FAs (added to SNO franchisee FAs for "total FAs signed"):', current);
+  // Total FAs signed is a manually entered number — no calculation.
+  const current = parseInt(SETTINGS.TotalFAs) || 345;
+  const val = prompt('Total FAs signed:', current);
   if (val === null) return; // cancelled
   const num = parseInt(val);
   if (isNaN(num) || num < 0) { alert('Please enter a valid number.'); return; }
-  SETTINGS.OpenFAs = num;
+  SETTINGS.TotalFAs = num;
   renderSettings();
-  // Save to Google Sheet
+  // Save to the Settings sheet
   if (ROCKS_API_URL) {
     fetch(ROCKS_API_URL, {
       method: 'POST',
-      body: JSON.stringify({ type:'settings', action:'update', key:'OpenFAs', value:num })
+      body: JSON.stringify({ type:'settings', action:'update', key:'TotalFAs', value:num })
     }).catch(e => console.warn('Settings save error:', e));
   }
 }
@@ -2222,6 +2242,7 @@ async function loadOpenStores() {
         layout:     s.Layout     || '',
         category:   s.Category   || 'Under Construction',
         ownerType:  s['Owner Type'] || 'Franchisee',
+        status:     s.Status || 'Active',
         openDate:   s['Open Date'] || '',
         notes:      s.Notes      || ''
       }));
@@ -2247,6 +2268,7 @@ async function saveStore_OS_sheet(store, action) {
         id: store.id, franchisee: store.franchisee, location: store.location,
         state: store.state, layout: store.layout, category: store.category,
         ownerType: store.ownerType || 'Franchisee',
+        status: store.status || 'Active',
         openDate: store.openDate, notes: store.notes
       })
     });
@@ -2262,22 +2284,35 @@ async function deleteStore_OS_sheet(id) {
 
 function renderOpenStores() {
   updateBanner();
-  const construction = OS_STORES.filter(s => s.category === 'Under Construction');
-  const planning     = OS_STORES.filter(s => s.category === 'Planning');
+  const isPaused = s => (s.status||'Active') === 'On Pause';
+  // Paused projects pull out of their category into the On Pause column
+  const construction = OS_STORES.filter(s => s.category === 'Under Construction' && !isPaused(s));
+  const planning     = OS_STORES.filter(s => s.category === 'Planning' && !isPaused(s));
+  const paused       = OS_STORES.filter(isPaused);
   const states       = [...new Set(OS_STORES.map(s => s.state).filter(Boolean))];
 
   const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
   const split = arr => {
+    if (!arr.length) return 'none';
     const corp = arr.filter(s => (s.ownerType||'Franchisee')==='Corporate').length;
     return corp ? `${arr.length-corp} franchisee · ${corp} corporate` : 'all franchisee';
   };
+
+  // KPI cards
   setEl('os-construction-count', construction.length);
-  setEl('os-construction-sub',   split(construction));
+  { const e=document.getElementById('os-construction-sub'); if(e) e.innerHTML='<b style="color:var(--green)">Active</b> · '+split(construction); }
   setEl('os-planning-count',     planning.length);
-  setEl('os-planning-sub',       split(planning));
+  { const e=document.getElementById('os-planning-sub'); if(e) e.innerHTML='<b style="color:var(--blue-dk)">Active</b> · '+split(planning); }
+  setEl('os-paused-count',       paused.length);
+  setEl('os-paused-sub',         paused.length ? split(paused) : 'none on pause');
   setEl('os-states-count',       states.length);
 
-  const renderList = (stores, listId, emptyId) => {
+  // Per-column count pills
+  setEl('os-cc-construction', construction.length);
+  setEl('os-cc-planning',     planning.length);
+  setEl('os-cc-paused',       paused.length);
+
+  const renderList = (stores, listId, emptyId, opts={}) => {
     const listEl  = document.getElementById(listId);
     const emptyEl = document.getElementById(emptyId);
     if (!listEl) return;
@@ -2289,13 +2324,17 @@ function renderOpenStores() {
     if (emptyEl) emptyEl.style.display = 'none';
     listEl.innerHTML = stores.map(s => {
       const dueStr = s.openDate ? new Date(s.openDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+      const corpChip = (s.ownerType||'Franchisee')==='Corporate' ? '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:#EFE9F5;color:#7B5EA7">CORP</span>' : '';
+      // In the On Pause column, show which stage the project was paused at
+      const stageChip = opts.showStage ? `<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:var(--tan-lt);color:var(--tan-dk)">${s.category==='Under Construction'?'CONSTRUCTION':'PLANNING'}</span>` : '';
       return `<div class="rock-item" onclick="openEditStore_OS(${s.id})">
         <div class="rock-item-body">
           <div class="rock-item-title">${s.location}</div>
           <div class="rock-item-meta">
             ${s.franchisee ? `<span class="rock-item-owner">👤 ${s.franchisee}</span>` : ''}
             <span class="badge bst">${s.state}</span>
-            ${(s.ownerType||'Franchisee')==='Corporate' ? '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:#EFE9F5;color:#7B5EA7">CORP</span>' : ''}
+            ${corpChip}
+            ${stageChip}
             ${dueStr ? `<span style="font-size:11px;color:var(--brown-muted)">📅 ${dueStr}</span>` : ''}
           </div>
           ${s.layout ? `<div style="font-size:11.5px;color:var(--brown-muted);margin-top:3px">${s.layout}${s.notes?' · '+s.notes:''}</div>` : ''}
@@ -2306,9 +2345,12 @@ function renderOpenStores() {
 
   renderList(construction, 'os-list-construction', 'os-empty-construction');
   renderList(planning,     'os-list-planning',     'os-empty-planning');
-  // Update badge to show pipeline total
+  renderList(paused,       'os-list-paused',       'os-empty-paused', {showStage:true});
+
+  // Header badge — overall, active, and paused totals at a glance
+  const active = construction.length + planning.length;
   const badge = document.getElementById('open-stores-badge');
-  if (badge) badge.textContent = OS_STORES.length + ' in pipeline';
+  if (badge) badge.textContent = `${OS_STORES.length} in pipeline · ${active} active · ${paused.length} on pause`;
 }
 
 function openAddStore_OS() {
@@ -2321,6 +2363,7 @@ function openAddStore_OS() {
   document.getElementById('os-layout').value = '';
   document.getElementById('os-category').value = 'Under Construction';
   document.getElementById('os-ownertype').value = 'Franchisee';
+  document.getElementById('os-status').value = 'Active';
   document.getElementById('os-opendate').value = '';
   document.getElementById('os-notes').value = '';
   document.getElementById('os-delete-btn').style.display = 'none';
@@ -2339,6 +2382,7 @@ function openEditStore_OS(id) {
   document.getElementById('os-layout').value = s.layout;
   document.getElementById('os-category').value = s.category;
   document.getElementById('os-ownertype').value = s.ownerType || 'Franchisee';
+  document.getElementById('os-status').value = s.status || 'Active';
   document.getElementById('os-opendate').value = s.openDate || '';
   document.getElementById('os-notes').value = s.notes || '';
   document.getElementById('os-delete-btn').style.display = 'inline-block';
@@ -2355,6 +2399,7 @@ async function saveStore_OS() {
     layout:     document.getElementById('os-layout').value.trim(),
     category:   document.getElementById('os-category').value,
     ownerType:  document.getElementById('os-ownertype').value,
+    status:     document.getElementById('os-status').value,
     openDate:   document.getElementById('os-opendate').value,
     notes:      document.getElementById('os-notes').value.trim()
   };
